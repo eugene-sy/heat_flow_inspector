@@ -1,0 +1,40 @@
+// ====================================================================
+// Allan CORNET
+// Copyright INRIA 2008
+// This file is released into the public domain
+// ====================================================================
+warning_mode = warning('query');
+warning('off');
+
+disp('Starting Heat Flow Inspector');
+
+etc_tlbx = get_absolute_file_path('heat_flow_inspector.start');
+etc_tlbx = getshortpathname(etc_tlbx);
+
+root_tlbx = strncpy( etc_tlbx, length(etc_tlbx)-length('\etc\') );
+
+pathmacros = pathconvert( root_tlbx ) + 'macros'+ filesep();
+
+disp('Loading functions');
+//Loading functions library
+exec(pathmacros+"calcFG.sci");
+exec(pathmacros+"calcHH.sci");
+exec(pathmacros+"calcQ.sci");
+exec(pathmacros+"calcU.sci");
+exec(pathmacros+"calcY.sci");
+exec(pathmacros+"ptp.sci");
+exec(pathmacros+"rule.sci");
+
+disp('Loading GUI');
+//Loading GUI
+exec(pathmacros+"general.sce");
+
+warning(warning_mode);
+
+// ====================================================================
+clear warning_mode;
+clear root_tlbx;
+clear etc_tlbx;
+clear pathmacros;
+// ====================================================================
+
