@@ -435,6 +435,7 @@ function solveProblems()
     general.sensivity = get(sensivity_checkbox, "Value");
     general.sdo = get(sdo_checkbox, "Value");
     general.inverse = get(inverse_checkbox, "Value");
+    general.dynresp = get(dynresp_checkbox, "Value");
     general.isFromFile  = get(from_file_checkbox, "Value");
     general.showMatrices  = get(show_matrices_checkbox, "Value");
     general.showDelta  = get(show_delta_checkbox, "Value");
@@ -590,11 +591,25 @@ function solveProblems()
             plot(results.K(2, :), 'g');
 
         end  
+        if general.dynresp == 1 then
+            //disp 'решаем динамические характеристики';
+            f_dynresp = figure("figure_name", "Динамические характеристики",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+            //sl = tf2ss(general.F, general.G, general.H);
+            //disp(sl);
+            L = syslin('c', general.F, general.G, general.H);
+            //L = syslin('d', sl);
+            //disp(L);
+            bode(L);
+            nyquist(L);
+        end
+    
     end
 endfunction  
 
 global general; 
-general = tlist(['problem';'direct';'inverse';'sensivity';'isFromFile';'QFromFile'; 'showMatrices'; 'showDelta'; 'sdo';...
+general = tlist(['problem';'direct';'dynresp';'inverse';'sensivity';'isFromFile';'QFromFile'; 'showMatrices'; 'showDelta'; 'sdo';...
 'dt';'time';'dt_total';'sp_length';'sp_total';'ptp_name';...
 
 
@@ -607,6 +622,7 @@ general.direct = 0;
 general.inverse = 1;
 general.sensivity = 0;
 general.sdo = 0;
+general.dynresp = 0;
 general.isFromFile = 0;
 general.QFromFile = 0;
 general.showMatrices = 0;
@@ -653,8 +669,7 @@ results = tlist(['result';'Yreal';'Qest';'Qhist';'Yinv';'P';'HH';'K'; 'deltaQ'])
 
 //GUI
 dialog_width = 430;
-dialog_height = 570;
-
+dialog_height = 600;
 control_width = 200;
 control_height = 20;
 
@@ -1066,7 +1081,7 @@ b_set_Q = uicontrol(f, "Position"  , [25 + control_width+(control_width-15)/2 di
 // ========================
 // Панель "Решаемые задачи"
 // ========================
-frame_problems_to_solve= uicontrol(f, "Position"  , [20 + control_width dialog_height - 30.5*control_height control_width-5 control_height*6.5],...
+frame_problems_to_solve= uicontrol(f, "Position"  , [20 + control_width dialog_height - 31.5*control_height control_width-5 control_height*7.5],...
 "Style"     , "frame",...
 "BackgroundColor",[0.9 0.9 0.9]);		 
 text_problems_name = uicontrol(f, "Position"  , [30 + control_width dialog_height - 24.5*control_height 105 control_height],...
@@ -1101,8 +1116,17 @@ inverse_checkbox = uicontrol(f, "Position"  , [25 + control_width dialog_height 
 "fontsize"           , 10,...
 "value"              , general.inverse, ...
 "background"          , [0.9 0.9 0.9], ...
-"tag"                , "inverse_checkbox");		
-b_solve = uicontrol(f, "Position"  , [25 + control_width+(control_width-15)/2 dialog_height - 30*control_height (control_width-15)/2 control_height],...
+"tag"                , "inverse_checkbox");
+// added by Eugene
+dynresp_checkbox = uicontrol(f, "Position"  , [25 + control_width dialog_height - 29.5*control_height control_width-15 control_height],......
+"style"              , "checkbox",...
+"string"             , "Динамические характеристики",...
+"fontsize"           , 10,...
+"value"              , general.dynresp, ...
+"background"          , [0.9 0.9 0.9], ...
+"tag"                , "dynresp_checkbox");
+// end of Eugenes block		
+b_solve = uicontrol(f, "Position"  , [25 + control_width+(control_width-15)/2 dialog_height - 31*control_height (control_width-15)/2 control_height],...
 "Style"     , "pushbutton",...
 "String"    , "Решить",...
 "callback"  , "solveProblems();");
