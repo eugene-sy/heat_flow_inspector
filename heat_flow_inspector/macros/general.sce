@@ -592,17 +592,27 @@ function solveProblems()
 
         end  
         if general.dynresp == 1 then
-            //disp 'решаем динамические характеристики';
-            f_dynresp = figure("figure_name", "Динамические характеристики",...
+            // linear system building
+            sl = syslin(1, general.F, general.G, general.H);
+            // L - transfer function matrix
+            L = ss2tf(sl);
+            // вывод динамических характеристик
+            f_bode = figure("figure_name", "Динамические характеристики: Эванс",...
                 "Position",[0 0 dialog_width dialog_height],...
                 "BackgroundColor",[1 1 1]);
-            //sl = tf2ss(general.F, general.G, general.H);
-            //disp(sl);
-            L = syslin('c', general.F, general.G, general.H);
-            //L = syslin('d', sl);
-            //disp(L);
-            bode(L);
-            nyquist(L);
+            evans(L(:, 1));
+            f_bode = figure("figure_name", "Динамические характеристики: Боде",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+            bode(L(:, 1));
+            f_bode = figure("figure_name", "Динамические характеристики: Найквист",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+            nyquist(L(:, 1));
+            f_bode = figure("figure_name", "Динамические характеристики: Николс",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+            black(L(:, 1));
         end
     
     end
@@ -622,7 +632,7 @@ general.direct = 0;
 general.inverse = 1;
 general.sensivity = 0;
 general.sdo = 0;
-general.dynresp = 0;
+general.dynresp = 1;
 general.isFromFile = 0;
 general.QFromFile = 0;
 general.showMatrices = 0;
