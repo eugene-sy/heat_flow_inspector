@@ -591,30 +591,30 @@ function solveProblems()
             plot(results.K(2, :), 'g');
 
         end  
-        if general.dynresp == 1 then
-            // linear system building
-            sl = syslin(1, general.F, general.G, general.H);
-            // L - transfer function matrix
-            L = ss2tf(sl);
-            // вывод динамических характеристик
-            f_bode = figure("figure_name", "Динамические характеристики: Эванс",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            evans(L(:, 1));
-            f_bode = figure("figure_name", "Динамические характеристики: Боде",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            bode(L(:, 1));
-            f_bode = figure("figure_name", "Динамические характеристики: Найквист",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            nyquist(L(:, 1));
-            f_bode = figure("figure_name", "Динамические характеристики: Николс",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            black(L(:, 1));
-        end
+    end
     
+    if general.dynresp == 1 then
+        // linear system building
+        sl = syslin(1, general.F, general.G, general.H);
+        // L - transfer function matrix
+        L = ss2tf(sl);
+        // вывод динамических характеристик
+        f_bode = figure("figure_name", "Динамические характеристики: Эванс",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+        evans(L(:, 1));
+        f_bode = figure("figure_name", "Динамические характеристики: Боде",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+        bode(L(:, 1));
+        f_bode = figure("figure_name", "Динамические характеристики: Найквист",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+        nyquist(L(:, 1));
+        f_bode = figure("figure_name", "Динамические характеристики: Николс",...
+                "Position",[0 0 dialog_width dialog_height],...
+                "BackgroundColor",[1 1 1]);
+        black(L(:, 1));
     end
 endfunction  
 
