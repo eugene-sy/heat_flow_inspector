@@ -598,8 +598,10 @@ function solveProblems()
         sl = syslin(1, general.F, general.G, general.H);
         // L - transfer function matrix
         L = ss2tf(sl);
+        //disp(L);
         // dynresp plotting
-        t = 0:0.5:10;
+        t = 0:0.1:10;
+        messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
         f_impulse = figure("figure_name", "Динамические характеристики: импульсная",...
                 "Position",[0 0 dialog_width dialog_height],...
                 "BackgroundColor",[1 1 1]);
