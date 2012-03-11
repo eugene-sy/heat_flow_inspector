@@ -437,6 +437,8 @@ function solveProblems()
     general.inverse = get(inverse_checkbox, "Value");
     general.dynresp = get(dynresp_checkbox, "Value");
     general.dynresp_additional = get(dynresp_add_checkbox, "Value");
+    general.dynresp_lower = get(dynresp_lower_checkbox, "Value");
+    general.realtime = get(realtime_checkbox, "Value");
     general.isFromFile  = get(from_file_checkbox, "Value");
     general.showMatrices  = get(show_matrices_checkbox, "Value");
     general.showDelta  = get(show_delta_checkbox, "Value");
@@ -603,6 +605,9 @@ function solveProblems()
         // dynresp plotting
         maxT = max(5, general.time);
         t = 0:0.01:maxT;
+        if general.dynresp_lower == 1 then
+            disp 'lower me!';
+        end
         messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
         disp(L(:, 1));
         //messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
