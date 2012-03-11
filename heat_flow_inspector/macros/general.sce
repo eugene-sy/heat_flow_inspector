@@ -597,17 +597,17 @@ function solveProblems()
     end
     
     if general.dynresp == 1 then
-        // linear system building
-        sl = syslin(1, general.F, general.G, general.H);
-        // L - transfer function matrix
-        L = ss2tf(sl);
-        //disp(L);
-        // dynresp plotting
-        maxT = max(5, general.time);
-        t = 0:0.01:maxT;
+        sl = syslin('c', general.F, general.G, general.H);
+        
+        // понижение порядка
         if general.dynresp_lower == 1 then
-            disp 'lower me!';
+            sl = minss(sl);
         end
+        
+        L = ss2tf(sl);
+        minT = min(5, general.time);
+        t = 0:0.01:minT;
+        
         messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
         disp(L(:, 1));
         //messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
