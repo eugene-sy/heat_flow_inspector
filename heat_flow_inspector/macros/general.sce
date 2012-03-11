@@ -604,6 +604,7 @@ function solveProblems()
         maxT = max(5, general.time);
         t = 0:0.01:maxT;
         messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
+        disp(L(:, 1));
         //messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
         f_impulse = figure("figure_name", "Динамические характеристики: переходная",...
                 "Position",[0 0 dialog_width dialog_height],...
