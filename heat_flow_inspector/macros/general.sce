@@ -428,215 +428,267 @@ function saveG(G)
   end
 endfunction
 
+///////////////////////////////////////////
+// Solver helpers                        //
+///////////////////////////////////////////
+
+
+
+///////////////////////////////////////////
+// Problem solving                       //
+///////////////////////////////////////////
 function solveProblems()
     global('general');
     global('results');
-    general.direct = get(direct_checkbox, "Value");
-    general.sensivity = get(sensivity_checkbox, "Value");
-    general.sdo = get(sdo_checkbox, "Value");
-    general.inverse = get(inverse_checkbox, "Value");
-    general.dynresp = get(dynresp_checkbox, "Value");
-    general.dynresp_additional = get(dynresp_add_checkbox, "Value");
-    general.dynresp_lower = get(dynresp_lower_checkbox, "Value");
     general.realtime = get(realtime_checkbox, "Value");
-    general.isFromFile  = get(from_file_checkbox, "Value");
-    general.showMatrices  = get(show_matrices_checkbox, "Value");
-    general.showDelta  = get(show_delta_checkbox, "Value");
-    general.QFromFile  = get(Q_checkbox, "Value");
-    general.sp_length = evstr(get(edit_sp_length, "String"));
-    general.sp_total = floor(general.dt_total/general.sp_length);
-    general.qo = evstr(get(edit_qo, "String"));
-    general.po = evstr(get(edit_po, "String"));
-    general.dq = evstr(get(edit_dq, "String"));
-    [general.F, general.G] = getFG(ptp);
-    general.R = getR(size(general.H, 'r'), general.Eps);
-    general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
-    getU(rule2, general.dt, general.sp_length * general.sp_total)];
+    general.direct = get(direct_checkbox, "Value");
+	general.sensivity = get(sensivity_checkbox, "Value");
+	general.sdo = get(sdo_checkbox, "Value");
+	general.inverse = get(inverse_checkbox, "Value");
+	general.dynresp = get(dynresp_checkbox, "Value");
+	general.dynresp_additional = get(dynresp_add_checkbox, "Value");
+	general.dynresp_lower = get(dynresp_lower_checkbox, "Value");
+	general.isFromFile  = get(from_file_checkbox, "Value");
+	general.showMatrices  = get(show_matrices_checkbox, "Value");
+	general.showDelta  = get(show_delta_checkbox, "Value");
+	general.QFromFile  = get(Q_checkbox, "Value");
+	general.sp_length = evstr(get(edit_sp_length, "String"));
+	general.sp_total = floor(general.dt_total/general.sp_length);
+	general.qo = evstr(get(edit_qo, "String"));
+	general.po = evstr(get(edit_po, "String"));
+	general.dq = evstr(get(edit_dq, "String"));
+	[general.F, general.G] = getFG(ptp);
+	general.R = getR(size(general.H, 'r'), general.Eps);
+	general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
+	getU(rule2, general.dt, general.sp_length * general.sp_total)];
+	
+    // grphic windows
     if general.direct == 1 then
-        Y = getYall(general.To, general.F, general.G, general.H, ...
-        general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
         f_direct = figure("figure_name", "Прямая задача",...
-        "Position",[0 0 dialog_width dialog_height],...
-        "BackgroundColor",[1 1 1]);
-        tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
-        subplot(2,1,1);
-        xgrid(1);
-        xlabel('время, с');
-        ylabel('тепловой поток, Вт/м2');    
-        plot(tau, general.U(:, 1), 'b');
-        plot(tau, general.U(:, 2), 'g');    
-        subplot(2,1,2);
-        xgrid(1);
-        xlabel('время, с');
-        ylabel('температура, °C');
-        for i=1:1:size(Y, 'r')
-            plot(tau, Y(i, :));
-        end
-    end  
-
-    if general.sensivity == 1 then
-        [Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
-        general.U(1:general.sp_length + 1,:), general.dt, ...
-        general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
-        general.dq, general.sp_length);
-        f_direct = figure("figure_name", "Чувствительность",...
-        "Position",[0 0 dialog_width dialog_height],...
-        "BackgroundColor",[1 1 1]);
-        plot(Hqa(1, :));
-        plot(Hqb(1, :));
-        xlabel('k');
-        ylabel('U, К*м2/Вт');    
-        xgrid(1);      
-    end  
-
-    if general.sdo == 1 then
-        [Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
-        general.U(1:general.sp_length + 1,:), general.dt, ...
-        general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
-        general.dq, general.sp_length);
-        f_direct = figure("figure_name", "СДО",...
-        "Position",[0 0 dialog_width dialog_height],...
-        "BackgroundColor",[1 1 1]);
-        [x, y, z] = getSDO(Hqa, Hqb, general.sp_length, general.B)
-        contour(x, y, z, [0, 0]);
-        xlabel('qb, Вт/м2');
-        ylabel('qa, Вт/м2');    
-        xgrid(1);    
-    end  
-
-    if general.inverse == 1 then
-        if general.isFromFile == 1 then
-            results.Yreal = general.Y;
-        else
-            results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
-            general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
-        end
-
-        f_direct = figure("figure_name", "Обратная задача",...
-        "Position", [0 0 dialog_width dialog_height],...
-        "BackgroundColor",[1 1 1]);
-        tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;               
-        subplot(2,1,1);
-        xgrid(1);
-        xlabel('время, с');
-        ylabel('температура, °C');
-        for i=1:1:size(results.Yreal, 'r')
-            plot(tau, results.Yreal(i, :), 'b');
-        end
-
-        // Measure time consumed by Qinv. Start timer
-        tic();
-
-        [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
-        getQYall(general.To, general.F, general.G, ...
-        general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
-        general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
-        tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
-
-        // Stop timer and show results
-        t = toc();
-        disp(t);
-
-        for i=1:1:size(results.Yinv, 'r')
-            plot(tau, results.Yinv(i, :), 'r');
-        end
-        results.Yinv = [general.H * general.To results.Yinv];
-        Y_RMS = sqrt(norm(results.Yinv - results.Yreal)^2/size(results.Yinv, 'c'));
-        xtitle("СКО = " + string(Y_RMS));    
-        subplot(2,1,2);
-        a1=gca(); 
-        tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt; 
-        rule = tlist(['spline';'A']);
-        rule.A = [];
-        for i=1:1:size(results.Qest, 'c');
-            rule.A = [rule.A; tau(i) results.Qest(i)];
-        end
-        U1_ext = getU(rule, general.dt, general.sp_length * general.sp_total);
-        Q_RMS = sqrt(norm(U1_ext - general.U(:,1))^2/size(U1_ext, 'r'));
-        xtitle("СКО = " + string(Q_RMS));
-        xgrid(1);
-        xlabel('время, с');
-        ylabel('тепловой поток, Вт/м2');
-        plot(tau, results.Qest, 'r');
-
-        if general.showDelta == 1 then
-            plot(tau, results.Qest + results.deltaQ, 'm-.');
-            plot(tau, results.Qest - results.deltaQ, 'm-.');    
-        end
-
-        tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
-        plot(tau, general.U(:, 1), 'b');
-        plot(tau, general.U(:, 2), 'g');
-
-        if general.QFromFile == 1 then
-            plot(tau, general.Q, 'b');
-            l1=a1.children.children(1);
-            l1.mark_style=0;
-            l1.mark_foreground=2;
-            l1.mark_size=4;
-        end 
-
-        if general.showMatrices == 1 then 
-            f_cov = figure("figure_name", "Ковариационная матрица",...
-            "Position", [0 0 dialog_width dialog_height],...
-            "BackgroundColor",[1 1 1]);
-            plot(results.P(1, :), 'b');
-            plot(results.P(2, :), 'g');    
-            f_sense = figure("figure_name", "Функции чувствительности",...
-            "Position", [0 0 dialog_width dialog_height],...
-            "BackgroundColor",[1 1 1]);
-            plot(results.HH(:, 1), 'b');
-            plot(results.HH(:, 2), 'g');
-            f_sense = figure("figure_name", "Весовая матрица",...
-            "Position", [0 0 dialog_width dialog_height],...
-            "BackgroundColor",[1 1 1]);
-            plot(results.K(1, :), 'b');
-            plot(results.K(2, :), 'g');
-
-        end  
+			        "Position",[0 0 dialog_width dialog_height],...
+			        "BackgroundColor",[1 1 1]);
     end
     
-    if general.dynresp == 1 then
-        sl = syslin('c', general.F, general.G, general.H);
-        
-        // понижение порядка
-        if general.dynresp_lower == 1 then
-            sl = minss(sl);
-        end
-        
-        L = ss2tf(sl);
-        minT = min(5, general.time);
-        t = 0:0.01:minT;
-        
-        messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
-        disp(L(:, 1));
-        //messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
-        f_impulse = figure("figure_name", "Динамические характеристики: переходная",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-        plot2d([t',t'],[(csim('impulse', t, L(:, 1)))',0*t']);
-        f_impulse = figure("figure_name", "Динамические характеристики: импульсно-переходная",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);  
-        plot2d([t',t'],[(csim('step', t, L(:, 1)))',0*t']);     
-        f_bode = figure("figure_name", "Динамические характеристики: частотные характеристики",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-        bode(L(:, 1));
-        if general.dynresp_additional == 1 then
-            f_evans = figure("figure_name", "Динамические характеристики: Эванс",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            evans(L(:, 1));
-            f_nyquist = figure("figure_name", "Динамические характеристики: Найквист",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            nyquist(L(:, 1));
-            f_black = figure("figure_name", "Динамические характеристики: Николс",...
-                "Position",[0 0 dialog_width dialog_height],...
-                "BackgroundColor",[1 1 1]);
-            black(L(:, 1));
-        end
+    // solving
+    if general.realtime == 0 then
+		// if not in realtime
+		disp("static solution");
+		if general.direct == 1 then
+			Y = getYall(general.To, general.F, general.G, general.H, ...
+			general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+			//f_direct = figure("figure_name", "Прямая задача",...
+			//"Position",[0 0 dialog_width dialog_height],...
+			//"BackgroundColor",[1 1 1]);
+            clf(f_direct);
+			tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+			subplot(2,1,1);
+			xgrid(1);
+			xlabel('время, с');
+			ylabel('тепловой поток, Вт/м2');    
+			plot(tau, general.U(:, 1), 'b');
+			plot(tau, general.U(:, 2), 'g');    
+			subplot(2,1,2);
+			xgrid(1);
+			xlabel('время, с');
+			ylabel('температура, °C');
+			for i=1:1:size(Y, 'r')
+				plot(tau, Y(i, :));
+			end
+		end  
+
+		if general.sensivity == 1 then
+			[Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
+			general.U(1:general.sp_length + 1,:), general.dt, ...
+			general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
+			general.dq, general.sp_length);
+			f_direct = figure("figure_name", "Чувствительность",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+			plot(Hqa(1, :));
+			plot(Hqb(1, :));
+			xlabel('k');
+			ylabel('U, К*м2/Вт');    
+			xgrid(1);      
+		end  
+	
+		if general.sdo == 1 then
+			[Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
+			general.U(1:general.sp_length + 1,:), general.dt, ...
+			general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
+			general.dq, general.sp_length);
+			f_direct = figure("figure_name", "СДО",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+			[x, y, z] = getSDO(Hqa, Hqb, general.sp_length, general.B)
+			contour(x, y, z, [0, 0]);
+			xlabel('qb, Вт/м2');
+			ylabel('qa, Вт/м2');    
+			xgrid(1);    
+		end  
+	
+		if general.inverse == 1 then
+			if general.isFromFile == 1 then
+				results.Yreal = general.Y;
+			else
+				results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
+				general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+			end
+	
+			f_direct = figure("figure_name", "Обратная задача",...
+			"Position", [0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+			tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;               
+			subplot(2,1,1);
+			xgrid(1);
+			xlabel('время, с');
+			ylabel('температура, °C');
+			for i=1:1:size(results.Yreal, 'r')
+				plot(tau, results.Yreal(i, :), 'b');
+			end
+	
+			// Measure time consumed by Qinv. Start timer
+			tic();
+	
+			[results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
+			getQYall(general.To, general.F, general.G, ...
+			general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
+			general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
+			tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
+	
+			// Stop timer and show results
+			t = toc();
+			disp(t);
+	
+			for i=1:1:size(results.Yinv, 'r')
+				plot(tau, results.Yinv(i, :), 'r');
+			end
+			results.Yinv = [general.H * general.To results.Yinv];
+			Y_RMS = sqrt(norm(results.Yinv - results.Yreal)^2/size(results.Yinv, 'c'));
+			xtitle("СКО = " + string(Y_RMS));    
+			subplot(2,1,2);
+			a1=gca(); 
+			tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt; 
+			rule = tlist(['spline';'A']);
+			rule.A = [];
+			for i=1:1:size(results.Qest, 'c');
+				rule.A = [rule.A; tau(i) results.Qest(i)];
+			end
+			U1_ext = getU(rule, general.dt, general.sp_length * general.sp_total);
+			Q_RMS = sqrt(norm(U1_ext - general.U(:,1))^2/size(U1_ext, 'r'));
+			xtitle("СКО = " + string(Q_RMS));
+			xgrid(1);
+			xlabel('время, с');
+			ylabel('тепловой поток, Вт/м2');
+			plot(tau, results.Qest, 'r');
+	
+			if general.showDelta == 1 then
+				plot(tau, results.Qest + results.deltaQ, 'm-.');
+				plot(tau, results.Qest - results.deltaQ, 'm-.');    
+			end
+	
+			tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+			plot(tau, general.U(:, 1), 'b');
+			plot(tau, general.U(:, 2), 'g');
+
+			if general.QFromFile == 1 then
+				plot(tau, general.Q, 'b');
+				l1=a1.children.children(1);
+				l1.mark_style=0;
+				l1.mark_foreground=2;
+				l1.mark_size=4;
+			end 
+	
+			if general.showMatrices == 1 then 
+				f_cov = figure("figure_name", "Ковариационная матрица",...
+				"Position", [0 0 dialog_width dialog_height],...
+				"BackgroundColor",[1 1 1]);
+				plot(results.P(1, :), 'b');
+				plot(results.P(2, :), 'g');    
+				f_sense = figure("figure_name", "Функции чувствительности",...
+				"Position", [0 0 dialog_width dialog_height],...
+				"BackgroundColor",[1 1 1]);
+				plot(results.HH(:, 1), 'b');
+				plot(results.HH(:, 2), 'g');
+				f_sense = figure("figure_name", "Весовая матрица",...
+				"Position", [0 0 dialog_width dialog_height],...
+				"BackgroundColor",[1 1 1]);
+				plot(results.K(1, :), 'b');
+				plot(results.K(2, :), 'g');
+	
+			end  
+		end
+    
+		if general.dynresp == 1 then
+			sl = syslin('c', general.F, general.G, general.H);
+			
+			// понижение порядка
+			if general.dynresp_lower == 1 then
+				sl = minss(sl);
+			end
+			
+			L = ss2tf(sl);
+			minT = min(5, general.time);
+			t = 0:0.01:minT;
+			
+			messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
+			disp(L(:, 1));
+			//messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
+			f_impulse = figure("figure_name", "Динамические характеристики: переходная",...
+					"Position",[0 0 dialog_width dialog_height],...
+					"BackgroundColor",[1 1 1]);
+			plot2d([t',t'],[(csim('impulse', t, L(:, 1)))',0*t']);
+			f_impulse = figure("figure_name", "Динамические характеристики: импульсно-переходная",...
+					"Position",[0 0 dialog_width dialog_height],...
+					"BackgroundColor",[1 1 1]);  
+			plot2d([t',t'],[(csim('step', t, L(:, 1)))',0*t']);     
+			f_bode = figure("figure_name", "Динамические характеристики: частотные характеристики",...
+					"Position",[0 0 dialog_width dialog_height],...
+					"BackgroundColor",[1 1 1]);
+			bode(L(:, 1));
+			if general.dynresp_additional == 1 then
+				f_evans = figure("figure_name", "Динамические характеристики: Эванс",...
+					"Position",[0 0 dialog_width dialog_height],...
+					"BackgroundColor",[1 1 1]);
+				evans(L(:, 1));
+				f_nyquist = figure("figure_name", "Динамические характеристики: Найквист",...
+					"Position",[0 0 dialog_width dialog_height],...
+					"BackgroundColor",[1 1 1]);
+				nyquist(L(:, 1));
+				f_black = figure("figure_name", "Динамические характеристики: Николс",...
+					"Position",[0 0 dialog_width dialog_height],...
+					"BackgroundColor",[1 1 1]);
+				black(L(:, 1));
+			end
+		end
+	else
+		// here code for realtime solving
+		i = 0;
+        // h=openserial(1,"9600,n,8,1"); no serial port here :(
+		while (i < 10)
+            i = i + 1;
+            //[q, flags] = readserial(h);
+            if general.direct == 1 then
+			    Y = getYall(general.To, general.F, general.G, general.H, ...
+			    general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+			    clf(f_direct,'reset');
+                subplot(2,1,1);
+			    xgrid(1);
+			    xlabel('время, с');
+			    ylabel('тепловой поток, Вт/м2');    
+			    plot(tau, general.U(:, 1), 'b');
+			    plot(tau, general.U(:, 2), 'g');    
+			    subplot(2,1,2);
+			    xgrid(1);
+			    xlabel('время, с');
+			    ylabel('температура, °C');
+			    for i=1:1:size(Y, 'r')
+				    plot(tau, Y(i, :));
+			    end
+		    end
+			sleep(10000);
+		end
+        //closeserial();
     end
 endfunction  
 
