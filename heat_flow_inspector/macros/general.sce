@@ -468,6 +468,12 @@ function solveProblems()
 			        "Position",[0 0 dialog_width dialog_height],...
 			        "BackgroundColor",[1 1 1]);
     end
+
+    if general.inverse == 1 then
+        f_direct = figure("figure_name", "Прямая задача",...
+			        "Position",[0 0 dialog_width dialog_height],...
+			        "BackgroundColor",[1 1 1]);
+    end
     
     // solving
     if general.realtime == 0 then
@@ -685,6 +691,98 @@ function solveProblems()
 			    for i=1:1:size(Y, 'r')
 				    plot(tau, Y(i, :));
 			    end
+		    end
+
+            if general.inverse == 1 then
+			    if general.isFromFile == 1 then
+				    results.Yreal = general.Y;
+			    else
+				    results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
+				    general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+			    end
+	
+			    //f_direct = figure("figure_name", "Обратная задача",...
+			    //    "Position", [0 0 dialog_width dialog_height],...
+			    //    "BackgroundColor",[1 1 1]);
+			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;               
+			    subplot(2,1,1);
+			    xgrid(1);
+			    xlabel('время, с');
+			    ylabel('температура, °C');
+			    for i=1:1:size(results.Yreal, 'r')
+				    plot(tau, results.Yreal(i, :), 'b');
+			    end
+	
+			    // Measure time consumed by Qinv. Start timer
+			    tic();
+	
+			    [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
+			    getQYall(general.To, general.F, general.G, ...
+			    general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
+			    general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
+			    tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
+	
+			    // Stop timer and show results
+			    t = toc();
+			    disp(t);
+	
+			    for i=1:1:size(results.Yinv, 'r')
+				    plot(tau, results.Yinv(i, :), 'r');
+			    end
+			    results.Yinv = [general.H * general.To results.Yinv];
+			    Y_RMS = sqrt(norm(results.Yinv - results.Yreal)^2/size(results.Yinv, 'c'));
+			    xtitle("СКО = " + string(Y_RMS));    
+			    subplot(2,1,2);
+			    a1=gca(); 
+			    tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt; 
+			    rule = tlist(['spline';'A']);
+			    rule.A = [];
+			    for i=1:1:size(results.Qest, 'c');
+				    rule.A = [rule.A; tau(i) results.Qest(i)];
+			    end
+			    U1_ext = getU(rule, general.dt, general.sp_length * general.sp_total);
+			    Q_RMS = sqrt(norm(U1_ext - general.U(:,1))^2/size(U1_ext, 'r'));
+			    xtitle("СКО = " + string(Q_RMS));
+			    xgrid(1);
+			    xlabel('время, с');
+			    ylabel('тепловой поток, Вт/м2');
+			    plot(tau, results.Qest, 'r');
+	
+			    if general.showDelta == 1 then
+				    plot(tau, results.Qest + results.deltaQ, 'm-.');
+				    plot(tau, results.Qest - results.deltaQ, 'm-.');    
+			    end
+	
+			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+			    plot(tau, general.U(:, 1), 'b');
+			    plot(tau, general.U(:, 2), 'g');
+
+			    if general.QFromFile == 1 then
+				    plot(tau, general.Q, 'b');
+				    l1=a1.children.children(1);
+				    l1.mark_style=0;
+				    l1.mark_foreground=2;
+				    l1.mark_size=4;
+			    end 
+	
+			    //if general.showMatrices == 1 then 
+				  //  f_cov = figure("figure_name", "Ковариационная матрица",...
+				 //       "Position", [0 0 dialog_width dialog_height],...
+				 //       "BackgroundColor",[1 1 1]);
+				 //   plot(results.P(1, :), 'b');
+				 //   plot(results.P(2, :), 'g');    
+				 //   f_sense = figure("figure_name", "Функции чувствительности",...
+				//    "Position", [0 0 dialog_width dialog_height],...
+				//    "BackgroundColor",[1 1 1]);
+				//    plot(results.HH(:, 1), 'b');
+				//    plot(results.HH(:, 2), 'g');
+				//    f_sense = figure("figure_name", "Весовая матрица",...
+				//        "Position", [0 0 dialog_width dialog_height],...
+				//        "BackgroundColor",[1 1 1]);
+				//    plot(results.K(1, :), 'b');
+				//    plot(results.K(2, :), 'g');
+	            //
+			    //end  
 		    end
 			sleep(10000);
 		end
