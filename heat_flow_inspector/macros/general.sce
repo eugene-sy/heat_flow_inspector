@@ -542,6 +542,9 @@ function solveSdo()
 	xgrid(1);
 endfunction
 
+// used to solve direct problem in non-realtime mode
+// takes 'fig' parameter to draw graphs on it
+// general.* and result.* variables are used here
 function solveDirectOnce(fig)
 	Y = getYall(general.To, general.F, general.G, general.H, ...
 			general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
@@ -563,6 +566,9 @@ function solveDirectOnce(fig)
 	end
 endfunction
 
+// used to solve inverse problem in non-realtime mode
+// takes 'fig' parameter to draw graphs on it
+// general.* and result.* variables are used here
 function solveInverseOnce(fig)
 	if general.isFromFile == 1 then
 		results.Yreal = general.Y;
@@ -586,9 +592,9 @@ function solveInverseOnce(fig)
 	tic();
 	
 	[results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
-	getQYall(general.To, general.F, general.G, ...
-	general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
-	general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
+		getQYall(general.To, general.F, general.G, ...
+		general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
+		general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
 	tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
 	
 	// Stop timer and show results
@@ -824,12 +830,9 @@ endfunction
 
 global general; 
 general = tlist(['problem';'direct';'dynresp';'dynresp_additional';'dynresp_lower';'inverse';'realtime';'sensivity';'isFromFile';'QFromFile'; 'showMatrices'; 'showDelta'; 'sdo';...
-'dt';'time';'dt_total';'sp_length';'sp_total';'ptp_name';...
-
-
-
-'blocks';'GU1type';'GU2type';'F';'G';'rule1_name';'rule2_name';...
-'U';'qo';'po';'dq';'B';'To';'measurements';'H';'Eps';'R';'Y';'Q']);
+	'dt';'time';'dt_total';'sp_length';'sp_total';'ptp_name';...
+	'blocks';'GU1type';'GU2type';'F';'G';'rule1_name';'rule2_name';...
+	'U';'qo';'po';'dq';'B';'To';'measurements';'H';'Eps';'R';'Y';'Q']);
 
 //List of problems to solve
 general.direct = 0;
@@ -884,7 +887,9 @@ general.R = getR(size(general.H, 'r'), general.Eps);
 global results;
 results = tlist(['result';'Yreal';'Qest';'Qhist';'Yinv';'P';'HH';'K'; 'deltaQ']);
 
-//GUI
+///////////////////////////////////////////////////
+//                    GUI                        //
+///////////////////////////////////////////////////
 dialog_width = 430;
 dialog_height = 640;
 control_width = 200;
