@@ -672,7 +672,7 @@ function solveProblems()
 	[general.F, general.G] = getFG(ptp);
 	general.R = getR(size(general.H, 'r'), general.Eps);
 	general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
-	getU(rule2, general.dt, general.sp_length * general.sp_total)];
+		getU(rule2, general.dt, general.sp_length * general.sp_total)];
 	
     // grphic windows
 	// direct solution
@@ -722,14 +722,19 @@ function solveProblems()
 		// otherwise
 		i = 0;
 		matrices_are_shown = 0; // for showMatrices case (just to solve and render it once)
+		
+		// params
+		tau = [];
+		
         // h=openserial(1,"9600,n,8,1"); no serial port here :(
-		while (i < 10)
-            i = i + 1;
+		while (i < 10) // debug mode, infinite loop required
+            i = i + 1; // debug, look at 1 line above
             //[q, flags] = readserial(h);
             if general.direct == 1 then
 			    Y = getYall(general.To, general.F, general.G, general.H, ...
-			    general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
-			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;			    
+					general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+				dtime = general.sp_length * general.sp_total * general.dt
+			    tau = (i - 1) * dtime:general.dt:dtime * i;
 				scf(f_direct);
 				clf(f_direct,'reset');
                 subplot(2,1,1);
@@ -752,7 +757,7 @@ function solveProblems()
 				    results.Yreal = general.Y;
 			    else
 				    results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
-				    general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+						general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
 			    end
 	
 				scf(f_direct);
