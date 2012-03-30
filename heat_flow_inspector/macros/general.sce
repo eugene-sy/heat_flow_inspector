@@ -432,7 +432,98 @@ endfunction
 // Solver helpers                        //
 ///////////////////////////////////////////
 
+// solve sensivity of solution
+// general.* and result.* variables are used here
+function solveSensivity() 
+	[Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
+		general.U(1:general.sp_length + 1,:), general.dt, ...
+		general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
+		general.dq, general.sp_length);
+	
+	// plotting
+	f_direct = figure("figure_name", "Чувствительность",...
+		"Position",[0 0 dialog_width dialog_height],...
+		"BackgroundColor",[1 1 1]);
+	plot(Hqa(1, :));
+	plot(Hqb(1, :));
+	xlabel('k');
+	ylabel('U, К*м2/Вт');    
+	xgrid(1);
+endfunction
 
+// solve dynamic responce 
+// general.* and result.* variables are used here
+function solveDynResp() 
+	sl = syslin('c', general.F, general.G, general.H);
+			
+	// lowering order of function
+	// TODO: classic YxY matrix is needed 
+	if general.dynresp_lower == 1 then
+		sl = minss(sl);
+	end
+	
+	L = ss2tf(sl);
+	minT = min(5, general.time);
+	t = 0:0.01:minT;
+	
+	messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
+	disp(L(:, 1));
+	//messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
+	// transition function
+	f_trans = figure("figure_name", "Динамические характеристики: переходная",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+	plot2d([t',t'],[(csim('impulse', t, L(:, 1)))',0*t']);
+	// impulse function
+	f_impulse = figure("figure_name", "Динамические характеристики: импульсно-переходная",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);  
+	plot2d([t',t'],[(csim('step', t, L(:, 1)))',0*t']);
+	// Bode function
+	f_bode = figure("figure_name", "Динамические характеристики: частотные характеристики",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+	bode(L(:, 1));
+	
+	// if some additional dynresp functions are needed (Evans, Nyquist, Black)
+	if general.dynresp_additional == 1 then
+		// evans one
+		f_evans = figure("figure_name", "Динамические характеристики: Эванс",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+		evans(L(:, 1));
+		// nyquist one 
+		f_nyquist = figure("figure_name", "Динамические характеристики: Найквист",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+		nyquist(L(:, 1));
+		// black one
+		f_black = figure("figure_name", "Динамические характеристики: Николс",...
+			"Position",[0 0 dialog_width dialog_height],...
+			"BackgroundColor",[1 1 1]);
+		black(L(:, 1));
+	end
+endfunction	
+
+// used to show matrix's when show matrix flag is put
+// general.* and result.* variables are used here
+function showMatrices() 
+	f_cov = figure("figure_name", "Ковариационная матрица",...
+	    "Position", [0 0 dialog_width dialog_height],...
+	    "BackgroundColor",[1 1 1]);
+	plot(results.P(1, :), 'b');
+	plot(results.P(2, :), 'g');    
+	f_sense = figure("figure_name", "Функции чувствительности",...
+	"Position", [0 0 dialog_width dialog_height],...
+	"BackgroundColor",[1 1 1]);
+	plot(results.HH(:, 1), 'b');
+	plot(results.HH(:, 2), 'g');
+	f_sense = figure("figure_name", "Весовая матрица",...
+	    "Position", [0 0 dialog_width dialog_height],...
+	    "BackgroundColor",[1 1 1]);
+	plot(results.K(1, :), 'b');
+	plot(results.K(2, :), 'g');
+endfunction		
 
 ///////////////////////////////////////////
 // Problem solving                       //
@@ -463,12 +554,14 @@ function solveProblems()
 	getU(rule2, general.dt, general.sp_length * general.sp_total)];
 	
     // grphic windows
+	// direct solution
     if general.direct == 1 then
         f_direct = figure("figure_name", "Прямая задача",...
 			        "Position",[0 0 dialog_width dialog_height],...
 			        "BackgroundColor",[1 1 1]);
     end
 
+	// inverse solution
     if general.inverse == 1 then
         f_direct = figure("figure_name", "Прямая задача",...
 			        "Position",[0 0 dialog_width dialog_height],...
@@ -502,19 +595,8 @@ function solveProblems()
 			end
 		end  
 
-		if general.sensivity == 1 then
-			[Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
-			general.U(1:general.sp_length + 1,:), general.dt, ...
-			general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
-			general.dq, general.sp_length);
-			f_direct = figure("figure_name", "Чувствительность",...
-			"Position",[0 0 dialog_width dialog_height],...
-			"BackgroundColor",[1 1 1]);
-			plot(Hqa(1, :));
-			plot(Hqb(1, :));
-			xlabel('k');
-			ylabel('U, К*м2/Вт');    
-			xgrid(1);      
+		if general.sensivity == 1 then 
+			solveSensivity();
 		end  
 	
 		if general.sdo == 1 then
@@ -540,9 +622,9 @@ function solveProblems()
 				general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
 			end
 	
-			f_direct = figure("figure_name", "Обратная задача",...
-			"Position", [0 0 dialog_width dialog_height],...
-			"BackgroundColor",[1 1 1]);
+			//f_direct = figure("figure_name", "Обратная задача",...
+			//"Position", [0 0 dialog_width dialog_height],...
+			//"BackgroundColor",[1 1 1]);
 			tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;               
 			subplot(2,1,1);
 			xgrid(1);
@@ -605,70 +687,23 @@ function solveProblems()
 			end 
 	
 			if general.showMatrices == 1 then 
-				f_cov = figure("figure_name", "Ковариационная матрица",...
-				"Position", [0 0 dialog_width dialog_height],...
-				"BackgroundColor",[1 1 1]);
-				plot(results.P(1, :), 'b');
-				plot(results.P(2, :), 'g');    
-				f_sense = figure("figure_name", "Функции чувствительности",...
-				"Position", [0 0 dialog_width dialog_height],...
-				"BackgroundColor",[1 1 1]);
-				plot(results.HH(:, 1), 'b');
-				plot(results.HH(:, 2), 'g');
-				f_sense = figure("figure_name", "Весовая матрица",...
-				"Position", [0 0 dialog_width dialog_height],...
-				"BackgroundColor",[1 1 1]);
-				plot(results.K(1, :), 'b');
-				plot(results.K(2, :), 'g');
-	
+				showMatrices();
 			end  
 		end
     
 		if general.dynresp == 1 then
-			sl = syslin('c', general.F, general.G, general.H);
-			
-			// понижение порядка
-			if general.dynresp_lower == 1 then
-				sl = minss(sl);
-			end
-			
-			L = ss2tf(sl);
-			minT = min(5, general.time);
-			t = 0:0.01:minT;
-			
-			messagebox("Передаточная функция: " + prettyprint(L(:, 1), "latex"), "Передаточная функция");
-			disp(L(:, 1));
-			//messagebox("Передаточная функция: " + string(L(:, 1)), "Передаточная функция");
-			f_impulse = figure("figure_name", "Динамические характеристики: переходная",...
-					"Position",[0 0 dialog_width dialog_height],...
-					"BackgroundColor",[1 1 1]);
-			plot2d([t',t'],[(csim('impulse', t, L(:, 1)))',0*t']);
-			f_impulse = figure("figure_name", "Динамические характеристики: импульсно-переходная",...
-					"Position",[0 0 dialog_width dialog_height],...
-					"BackgroundColor",[1 1 1]);  
-			plot2d([t',t'],[(csim('step', t, L(:, 1)))',0*t']);     
-			f_bode = figure("figure_name", "Динамические характеристики: частотные характеристики",...
-					"Position",[0 0 dialog_width dialog_height],...
-					"BackgroundColor",[1 1 1]);
-			bode(L(:, 1));
-			if general.dynresp_additional == 1 then
-				f_evans = figure("figure_name", "Динамические характеристики: Эванс",...
-					"Position",[0 0 dialog_width dialog_height],...
-					"BackgroundColor",[1 1 1]);
-				evans(L(:, 1));
-				f_nyquist = figure("figure_name", "Динамические характеристики: Найквист",...
-					"Position",[0 0 dialog_width dialog_height],...
-					"BackgroundColor",[1 1 1]);
-				nyquist(L(:, 1));
-				f_black = figure("figure_name", "Динамические характеристики: Николс",...
-					"Position",[0 0 dialog_width dialog_height],...
-					"BackgroundColor",[1 1 1]);
-				black(L(:, 1));
-			end
+			solveDynResp();
 		end
 	else
 		// here code for realtime solving
+		// if direct and indirect solution is not selected
+		if general.direct == 0 & general.inverse == 0 then
+			messagebox('Не выбран тип задачи', 'Ошибка');
+			return 0;
+		end
+		// otherwise
 		i = 0;
+		matrices_are_shown = 0; // for showMatrices case (just to solve and render it once)
         // h=openserial(1,"9600,n,8,1"); no serial port here :(
 		while (i < 10)
             i = i + 1;
@@ -676,8 +711,9 @@ function solveProblems()
             if general.direct == 1 then
 			    Y = getYall(general.To, general.F, general.G, general.H, ...
 			    general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
-			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
-			    clf(f_direct,'reset');
+			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;			    
+				scf(f_direct);
+				clf(f_direct,'reset');
                 subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
@@ -704,7 +740,8 @@ function solveProblems()
 			    //f_direct = figure("figure_name", "Обратная задача",...
 			    //    "Position", [0 0 dialog_width dialog_height],...
 			    //    "BackgroundColor",[1 1 1]);
-			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;               
+				scf(f_direct);
+			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;				
 			    subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
@@ -765,24 +802,10 @@ function solveProblems()
 				    l1.mark_size=4;
 			    end 
 	
-			    //if general.showMatrices == 1 then 
-				  //  f_cov = figure("figure_name", "Ковариационная матрица",...
-				 //       "Position", [0 0 dialog_width dialog_height],...
-				 //       "BackgroundColor",[1 1 1]);
-				 //   plot(results.P(1, :), 'b');
-				 //   plot(results.P(2, :), 'g');    
-				 //   f_sense = figure("figure_name", "Функции чувствительности",...
-				//    "Position", [0 0 dialog_width dialog_height],...
-				//    "BackgroundColor",[1 1 1]);
-				//    plot(results.HH(:, 1), 'b');
-				//    plot(results.HH(:, 2), 'g');
-				//    f_sense = figure("figure_name", "Весовая матрица",...
-				//        "Position", [0 0 dialog_width dialog_height],...
-				//        "BackgroundColor",[1 1 1]);
-				//    plot(results.K(1, :), 'b');
-				//    plot(results.K(2, :), 'g');
-	            //
-			    //end  
+			    if general.showMatrices == 1 & matrices_are_shown = 0 then 
+					showMatrices();
+					matrices_are_shown = 1;
+			    end  
 		    end
 			sleep(10000);
 		end
