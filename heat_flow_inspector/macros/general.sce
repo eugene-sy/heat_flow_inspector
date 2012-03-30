@@ -523,6 +523,23 @@ function showMatrices()
 	    "BackgroundColor",[1 1 1]);
 	plot(results.K(1, :), 'b');
 	plot(results.K(2, :), 'g');
+endfunction
+
+// used to show SDO ellipse when sdo flag is put
+// general.* and result.* variables are used here
+function solveSdo()
+	[Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
+			general.U(1:general.sp_length + 1,:), general.dt, ...
+			general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
+			general.dq, general.sp_length);
+	f_direct = figure("figure_name", "СДО",...
+	"Position",[0 0 dialog_width dialog_height],...
+	"BackgroundColor",[1 1 1]);
+	[x, y, z] = getSDO(Hqa, Hqb, general.sp_length, general.B)
+	contour(x, y, z, [0, 0]);
+	xlabel('qb, Вт/м2');
+	ylabel('qa, Вт/м2');    
+	xgrid(1);
 endfunction		
 
 ///////////////////////////////////////////
@@ -578,7 +595,8 @@ function solveProblems()
 			//f_direct = figure("figure_name", "Прямая задача",...
 			//"Position",[0 0 dialog_width dialog_height],...
 			//"BackgroundColor",[1 1 1]);
-            clf(f_direct);
+            scf(f_direct);
+			clf(f_direct);
 			tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
 			subplot(2,1,1);
 			xgrid(1);
@@ -600,18 +618,7 @@ function solveProblems()
 		end  
 	
 		if general.sdo == 1 then
-			[Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
-			general.U(1:general.sp_length + 1,:), general.dt, ...
-			general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
-			general.dq, general.sp_length);
-			f_direct = figure("figure_name", "СДО",...
-			"Position",[0 0 dialog_width dialog_height],...
-			"BackgroundColor",[1 1 1]);
-			[x, y, z] = getSDO(Hqa, Hqb, general.sp_length, general.B)
-			contour(x, y, z, [0, 0]);
-			xlabel('qb, Вт/м2');
-			ylabel('qa, Вт/м2');    
-			xgrid(1);    
+			solveSdo();
 		end  
 	
 		if general.inverse == 1 then
@@ -625,6 +632,8 @@ function solveProblems()
 			//f_direct = figure("figure_name", "Обратная задача",...
 			//"Position", [0 0 dialog_width dialog_height],...
 			//"BackgroundColor",[1 1 1]);
+			scf(f_direct);
+			clf(f_direct);
 			tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;               
 			subplot(2,1,1);
 			xgrid(1);
