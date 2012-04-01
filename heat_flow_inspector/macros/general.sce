@@ -720,21 +720,48 @@ function solveProblems()
 			return 0;
 		end
 		// otherwise
-		i = 0;
+		iter = 0;
 		matrices_are_shown = 0; // for showMatrices case (just to solve and render it once)
 		
 		// params
 		tau = [];
-		
+		timestep = general.dt * general.dt_total;
+		disp(timestep);
         // h=openserial(1,"9600,n,8,1"); no serial port here :(
-		while (i < 10) // debug mode, infinite loop required
-            i = i + 1; // debug, look at 1 line above
+		while (iter < 10) // debug mode, infinite loop required
+            iter = iter + 1; // debug, look at 1 line above
             //[q, flags] = readserial(h);
+			disp("next iter");
+			disp(iter);
+			// count props again
+			//general.dt = 0.01;
+			//general.time = 0.1;
+			//general.dt_total = floor(general.time/general.dt);
+			//general.sp_length = 10;
+			//general.sp_total = floor(general.dt_total/general.sp_length);
+			
+			disp(general.sp_length);
+			disp(general.sp_total);
+			general.time = timestep * iter;
+			disp(general.time);
+			general.dt_total = floor(general.time/general.dt);
+			//disp(general.dt_total);
+			general.sp_total = floor(general.dt_total/general.sp_length);
+			//disp(general.sp_total);
+		
+			dtime = general.sp_length * general.sp_total * general.dt;
+			//disp(dtime);
+			
+			general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
+				getU(rule2, general.dt, general.sp_length * general.sp_total)];
+		
             if general.direct == 1 then
 			    Y = getYall(general.To, general.F, general.G, general.H, ...
 					general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
-				dtime = general.sp_length * general.sp_total * general.dt
-			    tau = (i - 1) * dtime:general.dt:dtime * i;
+				
+			    //tau = (iter - 1) * dtime:general.dt:dtime * iter;
+				tau = 0:general.dt:general.time;
+				disp(max(tau));
 				scf(f_direct);
 				clf(f_direct,'reset');
                 subplot(2,1,1);
@@ -760,8 +787,11 @@ function solveProblems()
 						general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
 			    end
 	
-				scf(f_direct);
-			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;				
+				scf(f_inverse);
+				clf(f_inverse,'reset');
+				dtime = general.sp_length * general.sp_total * general.dt;
+			    tau = (iter - 1) * dtime:general.dt:dtime * iter;	
+				//disp(tau);				
 			    subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
@@ -774,11 +804,12 @@ function solveProblems()
 			    tic();
 	
 			    [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
-			    getQYall(general.To, general.F, general.G, ...
-			    general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
-			    general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
-			    tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
-	
+					getQYall(general.To, general.F, general.G, ...
+					general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
+					general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
+			    //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
+				tau = ((iter - 1) * dtime + general.dt):general.dt:dtime * iter;
+				//disp(tau);
 			    // Stop timer and show results
 			    t = toc();
 			    disp(t);
@@ -791,7 +822,9 @@ function solveProblems()
 			    xtitle("СКО = " + string(Y_RMS));    
 			    subplot(2,1,2);
 			    a1=gca(); 
-			    tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt; 
+			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
+				tau = (iter - 1) * dtime:general.dt*general.sp_length:iter * dtime;
+				//disp(tau);				
 			    rule = tlist(['spline';'A']);
 			    rule.A = [];
 			    for i=1:1:size(results.Qest, 'c');
@@ -810,17 +843,18 @@ function solveProblems()
 				    plot(tau, results.Qest - results.deltaQ, 'm-.');    
 			    end
 	
-			    tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+			    //tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+				tau = (iter - 1) * dtime:general.dt:iter * dtime;
 			    plot(tau, general.U(:, 1), 'b');
 			    plot(tau, general.U(:, 2), 'g');
 
-			    if general.QFromFile == 1 then
-				    plot(tau, general.Q, 'b');
-				    l1=a1.children.children(1);
-				    l1.mark_style=0;
-				    l1.mark_foreground=2;
-				    l1.mark_size=4;
-			    end 
+			    //if general.QFromFile == 1 then
+				//    plot(tau, general.Q, 'b');
+				//    l1=a1.children.children(1);
+				//    l1.mark_style=0;
+				//    l1.mark_foreground=2;
+				//    l1.mark_size=4;
+			    //end 
 	
 			    if general.showMatrices == 1 & matrices_are_shown = 0 then 
 					showMatrices();
@@ -829,6 +863,14 @@ function solveProblems()
 		    end
 			sleep(10000);
 		end
+		
+		// set default values
+		general.dt = 0.01;
+		general.time = 0.1;
+		general.dt_total = floor(general.time/general.dt);
+		general.sp_length = 10;
+		general.sp_total = floor(general.dt_total/general.sp_length);
+		
         //closeserial();
     end
 endfunction  
