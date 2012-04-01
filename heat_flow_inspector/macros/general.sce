@@ -692,7 +692,7 @@ function solveProblems()
     // solving
     if general.realtime == 0 then
 		// if not in realtime
-		disp("static solution");
+		// disp("static solution");
 		if general.direct == 1 then
 			solveDirectOnce(f_direct);
 		end  
@@ -734,23 +734,10 @@ function solveProblems()
 			disp("next iter");
 			disp(iter);
 			// count props again
-			//general.dt = 0.01;
-			//general.time = 0.1;
-			//general.dt_total = floor(general.time/general.dt);
-			//general.sp_length = 10;
-			//general.sp_total = floor(general.dt_total/general.sp_length);
-			
-			disp(general.sp_length);
-			disp(general.sp_total);
 			general.time = timestep * iter;
-			disp(general.time);
 			general.dt_total = floor(general.time/general.dt);
-			//disp(general.dt_total);
-			general.sp_total = floor(general.dt_total/general.sp_length);
-			//disp(general.sp_total);
-		
+			general.sp_total = floor(general.dt_total/general.sp_length);	
 			dtime = general.sp_length * general.sp_total * general.dt;
-			//disp(dtime);
 			
 			general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
 				getU(rule2, general.dt, general.sp_length * general.sp_total)];
@@ -764,6 +751,7 @@ function solveProblems()
 				disp(max(tau));
 				scf(f_direct);
 				clf(f_direct,'reset');
+				title("Прямая задача");
                 subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
@@ -809,7 +797,6 @@ function solveProblems()
 					general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
 			    //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
 				tau = ((iter - 1) * dtime + general.dt):general.dt:dtime * iter;
-				//disp(tau);
 			    // Stop timer and show results
 			    t = toc();
 			    disp(t);
@@ -823,8 +810,7 @@ function solveProblems()
 			    subplot(2,1,2);
 			    a1=gca(); 
 			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
-				tau = (iter - 1) * dtime:general.dt*general.sp_length:iter * dtime;
-				//disp(tau);				
+				tau = (iter - 1) * dtime:general.dt*general.sp_length:iter * dtime;				
 			    rule = tlist(['spline';'A']);
 			    rule.A = [];
 			    for i=1:1:size(results.Qest, 'c');
@@ -847,14 +833,6 @@ function solveProblems()
 				tau = (iter - 1) * dtime:general.dt:iter * dtime;
 			    plot(tau, general.U(:, 1), 'b');
 			    plot(tau, general.U(:, 2), 'g');
-
-			    //if general.QFromFile == 1 then
-				//    plot(tau, general.Q, 'b');
-				//    l1=a1.children.children(1);
-				//    l1.mark_style=0;
-				//    l1.mark_foreground=2;
-				//    l1.mark_size=4;
-			    //end 
 	
 			    if general.showMatrices == 1 & matrices_are_shown = 0 then 
 					showMatrices();
