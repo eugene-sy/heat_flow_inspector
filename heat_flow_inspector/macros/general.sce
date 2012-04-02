@@ -728,13 +728,16 @@ function solveProblems()
 		timestep = general.dt * general.dt_total;
 		disp(timestep);
         // h=openserial(1,"9600,n,8,1"); no serial port here :(
+		tic();
 		while (iter < 10) // debug mode, infinite loop required
+			
             iter = iter + 1; // debug, look at 1 line above
             //[q, flags] = readserial(h);
 			disp("next iter");
 			disp(iter);
 			// count props again
-			general.time = timestep * iter;
+			
+			general.time = toc();
 			general.dt_total = floor(general.time/general.dt);
 			general.sp_total = floor(general.dt_total/general.sp_length);	
 			dtime = general.sp_length * general.sp_total * general.dt;
@@ -748,7 +751,12 @@ function solveProblems()
 				
 			    //tau = (iter - 1) * dtime:general.dt:dtime * iter;
 				tau = 0:general.dt:general.time;
-				disp(max(tau));
+				// porn!
+				disp(general.time);
+				disp(length(tau));
+				disp(length(Y(1,:)));
+				tau = tau(1:length(Y(1,:)));
+				
 				scf(f_direct);
 				clf(f_direct,'reset');
 				title("Прямая задача");
@@ -789,7 +797,7 @@ function solveProblems()
 			    end
 	
 			    // Measure time consumed by Qinv. Start timer
-			    tic();
+			    //tic();
 	
 			    [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
 					getQYall(general.To, general.F, general.G, ...
@@ -798,8 +806,8 @@ function solveProblems()
 			    //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
 				tau = ((iter - 1) * dtime + general.dt):general.dt:dtime * iter;
 			    // Stop timer and show results
-			    t = toc();
-			    disp(t);
+			    //t = toc();
+			    //disp(t);
 	
 			    for i=1:1:size(results.Yinv, 'r')
 				    plot(tau, results.Yinv(i, :), 'r');
