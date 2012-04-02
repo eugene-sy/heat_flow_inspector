@@ -726,15 +726,15 @@ function solveProblems()
 		// params
 		tau = [];
 		timestep = general.dt * general.dt_total;
-		disp(timestep);
+
         // h=openserial(1,"9600,n,8,1"); no serial port here :(
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
 			
             iter = iter + 1; // debug, look at 1 line above
             //[q, flags] = readserial(h);
-			disp("next iter");
-			disp(iter);
+			//disp("next iter");
+			//disp(iter);
 			// count props again
 			
 			general.time = toc();
@@ -752,9 +752,9 @@ function solveProblems()
 			    //tau = (iter - 1) * dtime:general.dt:dtime * iter;
 				tau = 0:general.dt:general.time;
 				// porn!
-				disp(general.time);
-				disp(length(tau));
-				disp(length(Y(1,:)));
+				//disp(general.time);
+				//disp(length(tau));
+				//disp(length(Y(1,:)));
 				tau = tau(1:length(Y(1,:)));
 				
 				scf(f_direct);
