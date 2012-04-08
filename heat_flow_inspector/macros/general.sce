@@ -728,7 +728,7 @@ function solveProblems()
 		tau = [];
 		timestep = general.dt * general.dt_total;
 
-        h=openserial(2,"9600,n,8,1"); //no serial port here :(
+        h=openserial("COM" + general.com_num,"9600,n,8,1"); //no serial port here :(
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
 			
