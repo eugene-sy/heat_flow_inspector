@@ -673,6 +673,7 @@ function solveProblems()
 	general.R = getR(size(general.H, 'r'), general.Eps);
 	general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
 		getU(rule2, general.dt, general.sp_length * general.sp_total)];
+	general.com_num = get(edit_COMNUM, "String");
 	
     // grphic windows
 	// direct solution
@@ -727,12 +728,12 @@ function solveProblems()
 		tau = [];
 		timestep = general.dt * general.dt_total;
 
-        // h=openserial(1,"9600,n,8,1"); no serial port here :(
+        h=openserial(2,"9600,n,8,1"); //no serial port here :(
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
 			
             iter = iter + 1; // debug, look at 1 line above
-            //[q, flags] = readserial(h);
+            [q, flags] = readserial(h);
 			//disp("next iter");
 			//disp(iter);
 			// count props again
@@ -867,7 +868,7 @@ function solveProblems()
 		general.sp_length = 10;
 		general.sp_total = floor(general.dt_total/general.sp_length);
 		
-        //closeserial();
+        closeserial(h);
     end
 endfunction  
 
@@ -875,7 +876,7 @@ global general;
 general = tlist(['problem';'direct';'dynresp';'dynresp_additional';'dynresp_lower';'inverse';'realtime';'sensivity';'isFromFile';'QFromFile'; 'showMatrices'; 'showDelta'; 'sdo';...
 	'dt';'time';'dt_total';'sp_length';'sp_total';'ptp_name';...
 	'blocks';'GU1type';'GU2type';'F';'G';'rule1_name';'rule2_name';...
-	'U';'qo';'po';'dq';'B';'To';'measurements';'H';'Eps';'R';'Y';'Q']);
+	'U';'qo';'po';'dq';'B';'To';'measurements';'H';'Eps';'R';'Y';'Q';'com_num']);
 
 //List of problems to solve
 general.direct = 0;
@@ -897,6 +898,9 @@ general.time = 0.1;
 general.dt_total = floor(general.time/general.dt);
 general.sp_length = 10;
 general.sp_total = floor(general.dt_total/general.sp_length);
+
+//
+general.com_num = 1;
 
 //
 general.ptp_name = 'ptp1';
@@ -1169,6 +1173,29 @@ general.dt_total = floor(general.time/general.dt);...
 general.sp_total = floor(general.dt_total/general.sp_length);...
 set(edit_time, ""string"", string(general.time)); set(edit_dt, ""string"", string(general.dt));...
 set(edit_dt_total, ""string"", string(floor(general.time/general.dt)));general.Y = zeros(general.measurements, general.dt_total + 1);general.Q = zeros(general.measurements, general.dt_total + 1);");
+
+//==================================
+// Панель "Выбор COM порта"
+//==================================
+frame_tdt= uicontrol(f, "Position"  , [10 dialog_height - 33.5*control_height control_width-5 control_height*2.5],...
+"Style"     , "frame",...
+"BackgroundColor",[0.9 0.9 0.9]);
+text_tdt_panel_name = uicontrol(f, "Position"  , [20 dialog_height - 31.5*control_height 100 control_height],...
+"Style"     , "text",...
+"String"    , " Выбор COM порта",...
+"fontsize"  , 10,...
+"BackgroundColor",[0.9 0.9 0.9]);
+text_COMNUM = uicontrol(f, "Position"  , [15 dialog_height - 32.5*control_height (control_width-15)/2 control_height],...
+"Style"     , "text",...
+"String"    , "Номер COM : ",...
+"horizontalalignment","right",...		 
+"fontsize"  , 10,...
+"BackgroundColor",[0.9 0.9 0.9]);
+edit_COMNUM = uicontrol(f, "Position"  , [15+(control_width-15)/2 dialog_height - 32.5*control_height (control_width-15)/2 control_height],...
+"Style"     , "edit",...
+"String"    , string(general.com_num),...
+"Enable", "on",...
+"BackgroundColor",[1 1 1]);
 
 // =================================
 // Панель "Граничное условие сверху"
