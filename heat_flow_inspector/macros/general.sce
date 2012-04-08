@@ -728,12 +728,12 @@ function solveProblems()
 		tau = [];
 		timestep = general.dt * general.dt_total;
 
-        //h=openserial(general.com_num,"9600,n,8,1"); //no serial port here :(
+        h=openserial(2,"9600,n,8,1"); //no serial port here :(
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
 			
             iter = iter + 1; // debug, look at 1 line above
-            //[q, flags] = readserial(h);
+            buff = readserial(h);
 			//disp("next iter");
 			//disp(iter);
 			// count props again
@@ -850,7 +850,7 @@ function solveProblems()
 			    plot(tau, general.U(:, 1), 'b');
 			    plot(tau, general.U(:, 2), 'g');
 	
-			    if general.showMatrices == 1 & matrices_are_shown = 0 then 
+			    if general.showMatrices == 1 & matrices_are_shown == 0 then 
 					showMatrices();
 					matrices_are_shown = 1;
 			    end 
@@ -859,7 +859,6 @@ function solveProblems()
 				disp('Loop time:');
 				disp(b - a);
 		    end
-			last_time = general.time;
 			sleep(10000);
 		end
 		
@@ -870,7 +869,7 @@ function solveProblems()
 		general.sp_length = 10;
 		general.sp_total = floor(general.dt_total/general.sp_length);
 		
-        //closeserial(h);
+        closeserial(h);
     end
 endfunction  
 
