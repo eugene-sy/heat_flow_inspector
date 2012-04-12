@@ -653,6 +653,7 @@ function solveProblems()
     global('general');
     global('results');
     general.realtime = get(realtime_checkbox, "Value");
+    general.realtime_new_only = get(realtime_redraw_checkbox, "Value");
     general.direct = get(direct_checkbox, "Value");
 	general.sensivity = get(sensivity_checkbox, "Value");
 	general.sdo = get(sdo_checkbox, "Value");
@@ -675,6 +676,7 @@ function solveProblems()
 		getU(rule2, general.dt, general.sp_length * general.sp_total)];
 	general.com_num = get(edit_COMNUM, "String");
 	
+  disp(general.realtime_new_only);
     // grphic windows
 	// direct solution
     if general.direct == 1 then
@@ -728,12 +730,12 @@ function solveProblems()
 		tau = [];
 		timestep = general.dt * general.dt_total;
 
-        h=openserial("COM" + general.com_num,"9600,n,8,1"); //no serial port here :(
+       // h=openserial("COM" + general.com_num,"9600,n,8,1"); //no serial port here :(
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
 			
             iter = iter + 1; // debug, look at 1 line above
-            buff = readserial(h);
+         //   buff = readserial(h);
 			//disp("next iter");
 			//disp(iter);
 			// count props again
@@ -869,25 +871,26 @@ function solveProblems()
 		general.sp_length = 10;
 		general.sp_total = floor(general.dt_total/general.sp_length);
 		
-        closeserial(h);
+        //closeserial(h);
     end
 endfunction  
 
 global general; 
-general = tlist(['problem';'direct';'dynresp';'dynresp_additional';'dynresp_lower';'inverse';'realtime';'sensivity';'isFromFile';'QFromFile'; 'showMatrices'; 'showDelta'; 'sdo';...
+general = tlist(['problem';'direct';'dynresp';'dynresp_additional';'dynresp_lower';'inverse';'realtime';'realtime_new_only';'sensivity';'isFromFile';'QFromFile'; 'showMatrices'; 'showDelta'; 'sdo';...
 	'dt';'time';'dt_total';'sp_length';'sp_total';'ptp_name';...
 	'blocks';'GU1type';'GU2type';'F';'G';'rule1_name';'rule2_name';...
 	'U';'qo';'po';'dq';'B';'To';'measurements';'H';'Eps';'R';'Y';'Q';'com_num']);
 
 //List of problems to solve
-general.direct = 0;
+general.direct = 1;
 general.inverse = 0;
 general.sensivity = 0;
 general.sdo = 0;
 general.dynresp = 0;
 general.dynresp_additional = 0;
 general.dynresp_lower = 0;
-general.realtime = 0;
+general.realtime = 1;
+general.realtime_new_only = 0;
 general.isFromFile = 0;
 general.QFromFile = 0;
 general.showMatrices = 0;
@@ -938,13 +941,13 @@ results = tlist(['result';'Yreal';'Qest';'Qhist';'Yinv';'P';'HH';'K'; 'deltaQ'])
 //                    GUI                        //
 ///////////////////////////////////////////////////
 dialog_width = 430;
-dialog_height = 640;
+dialog_height = 670;
 control_width = 200;
 control_height = 20;
 
 // Creating new figure
 f = figure("figure_name", "Heat Flow Inspector",...
-"Position",[200 200 dialog_width dialog_height],...
+"Position",[100 200 dialog_width dialog_height],...
 "BackgroundColor",[0.9 0.9 0.9]);
 
 // ============
@@ -1373,7 +1376,7 @@ b_set_Q = uicontrol(f, "Position"  , [25 + control_width+(control_width-15)/2 di
 // ========================
 // Панель "Решаемые задачи"
 // ========================
-frame_problems_to_solve= uicontrol(f, "Position"  , [20 + control_width dialog_height - 34*control_height control_width-5 control_height*10],...
+frame_problems_to_solve= uicontrol(f, "Position"  , [20 + control_width dialog_height - 35*control_height control_width-5 control_height*11],...
 "Style"     , "frame",...
 "BackgroundColor",[0.9 0.9 0.9]);		 
 text_problems_name = uicontrol(f, "Position"  , [30 + control_width dialog_height - 24.5*control_height 105 control_height],...
@@ -1438,8 +1441,15 @@ realtime_checkbox = uicontrol(f, "Position"  , [25 + control_width dialog_height
 "value"              , general.realtime, ...
 "background"          , [0.9 0.9 0.9], ...
 "tag"                , "realtime_checkbox");
+realtime_redraw_checkbox = uicontrol(f, "Position"  , [35 + control_width dialog_height - 33.5*control_height control_width-25 control_height],......
+"style"              , "checkbox",...
+"string"             , "только новые значения",...
+"fontsize"           , 10,...
+"value"              , general.dynresp_lower, ...
+"background"          , [0.9 0.9 0.9], ...
+"tag"                , "dynresp_lower_checkbox");
 // end of Eugenes block		
-b_solve = uicontrol(f, "Position"  , [25 + control_width+(control_width-15)/2 dialog_height - 33.5*control_height (control_width-15)/2 control_height],...
+b_solve = uicontrol(f, "Position"  , [25 + control_width+(control_width-15)/2 dialog_height - 34.5*control_height (control_width-15)/2 control_height],...
 "Style"     , "pushbutton",...
 "String"    , "Решить",...
 "callback"  , "solveProblems();");
