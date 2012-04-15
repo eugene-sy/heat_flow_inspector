@@ -751,6 +751,8 @@ function solveProblems()
 
       // direct solution
       if general.direct == 1 then
+        Y = 0;
+        tau = 0;
         if general.realtime_new_only ~= 1
 			    Y = getYall(general.To, general.F, general.G, general.H, ...
 				  	general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
@@ -758,23 +760,6 @@ function solveProblems()
 				  tau = 0:general.dt:general.time;
           // otherwise dimentions of tau and Y will not match
 				  tau = tau(1:length(Y(1,:)));
-				
-				  scf(f_direct);
-				  clf(f_direct,'reset');
-				  title("Прямая задача");
-          subplot(2,1,1);
-			    xgrid(1);
-			    xlabel('время, с');
-			    ylabel('тепловой поток, Вт/м2');    
-			    plot(tau, general.U(:, 1), 'b');
-			    plot(tau, general.U(:, 2), 'g');    
-			    subplot(2,1,2);
-			    xgrid(1);
-			    xlabel('время, с');
-			    ylabel('температура, °C');
-			    for i=1:1:size(Y, 'r')
-				    plot(tau, Y(i, :));
-			    end
         else
           general.dt = (general.time - previous_time)/10;
           general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
@@ -785,23 +770,23 @@ function solveProblems()
           general.To = zeros(general.blocks, 1) + Y(1,length(Y(1,:)));
 
           tau = previous_time:general.dt:general.time;
-        
-          scf(f_direct);
-          clf(f_direct,'reset');
-          title("Прямая задача");
-          subplot(2,1,1);
-          xgrid(1);
-          xlabel('время, с');
-          ylabel('тепловой поток, Вт/м2');    
-          plot(tau, general.U(:, 1), 'b');
-          plot(tau, general.U(:, 2), 'g');    
-          subplot(2,1,2);
-          xgrid(1);
-          xlabel('время, с');
-          ylabel('температура, °C');
-          for i=1:1:size(Y, 'r')
-            plot(tau, Y(i, :));
-          end
+        end
+
+        scf(f_direct);
+        clf(f_direct,'reset');
+        title("Прямая задача");
+        subplot(2,1,1);
+        xgrid(1);
+        xlabel('время, с');
+        ylabel('тепловой поток, Вт/м2');    
+        plot(tau, general.U(:, 1), 'b');
+        plot(tau, general.U(:, 2), 'g');    
+        subplot(2,1,2);
+        xgrid(1);
+        xlabel('время, с');
+        ylabel('температура, °C');
+        for i=1:1:size(Y, 'r')
+          plot(tau, Y(i, :));
         end
 		  end
 
