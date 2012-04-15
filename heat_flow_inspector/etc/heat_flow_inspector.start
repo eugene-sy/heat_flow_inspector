@@ -17,17 +17,19 @@ pathmacros = pathconvert( root_tlbx ) + 'macros'+ filesep();
 
 disp('Loading functions');
 //Loading functions library
-exec(pathmacros+"calcFG.sci");
-exec(pathmacros+"calcHH.sci");
-exec(pathmacros+"calcQ.sci");
-exec(pathmacros+"calcU.sci");
-exec(pathmacros+"calcY.sci");
-exec(pathmacros+"ptp.sci");
-exec(pathmacros+"rule.sci");
+exec(pathmacros + "calcFG.sci");
+exec(pathmacros + "calcHH.sci");
+exec(pathmacros + "calcQ.sci");
+exec(pathmacros + "calcU.sci");
+exec(pathmacros + "calcY.sci");
+exec(pathmacros + "ptp.sci");
+exec(pathmacros + "rule.sci");
+//realtime ones
+exec(pathmacros + "calcURT.sci");
 
 disp('Loading GUI');
 //Loading GUI
-exec(pathmacros+"general.sce");
+exec(pathmacros + "general.sce");
 
 warning(warning_mode);
 

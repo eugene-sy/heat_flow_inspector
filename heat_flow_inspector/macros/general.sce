@@ -729,42 +729,40 @@ function solveProblems()
 		// params
 		tau = [];
 		timestep = general.dt * general.dt_total;
-
-       // h=openserial("COM" + general.com_num,"9600,n,8,1"); //no serial port here :(
+    previous_time = 0;
+       // h=openserial("COM" + general.com_num,"9600,n,8,1");
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
 			
-            iter = iter + 1; // debug, look at 1 line above
-         //   buff = readserial(h);
-			//disp("next iter");
-			//disp(iter);
+      iter = iter + 1; // debug, look at 1 line above
+      //   buff = readserial(h);
 			// count props again
-			
-			
+						
 			general.time = toc();
-			general.dt_total = floor(general.time/general.dt);
-			general.sp_total = floor(general.dt_total/general.sp_length);	
-			dtime = general.sp_length * general.sp_total * general.dt;
-			
-			general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
-				getU(rule2, general.dt, general.sp_length * general.sp_total)];
-		
-            if general.direct == 1 then
+      
+			if general.realtime_new_only == 0
+        general.dt_total = floor(general.time/general.dt);
+			  general.sp_total = floor(general.dt_total/general.sp_length);	 
+        general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
+          getU(rule2, general.dt, general.sp_length * general.sp_total)];
+      end
+      dtime = general.sp_length * general.sp_total * general.dt;
+      
+
+      // direct solution
+      if general.direct == 1 then
+        if general.realtime_new_only ~= 1
 			    Y = getYall(general.To, general.F, general.G, general.H, ...
-					general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+				  	general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+			
+				  tau = 0:general.dt:general.time;
+          // otherwise dimentions of tau and Y will not match
+				  tau = tau(1:length(Y(1,:)));
 				
-			    //tau = (iter - 1) * dtime:general.dt:dtime * iter;
-				tau = 0:general.dt:general.time;
-				// porn!
-				//disp(general.time);
-				//disp(length(tau));
-				//disp(length(Y(1,:)));
-				tau = tau(1:length(Y(1,:)));
-				
-				scf(f_direct);
-				clf(f_direct,'reset');
-				title("Прямая задача");
-                subplot(2,1,1);
+				  scf(f_direct);
+				  clf(f_direct,'reset');
+				  title("Прямая задача");
+          subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
 			    ylabel('тепловой поток, Вт/м2');    
@@ -777,9 +775,37 @@ function solveProblems()
 			    for i=1:1:size(Y, 'r')
 				    plot(tau, Y(i, :));
 			    end
-		    end
+        else
+          general.dt = (general.time - previous_time)/10;
+          general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
+            getURT(rule2, general.dt, (general.sp_length * general.sp_total), previous_time)];
+          Y = getYall(general.To, general.F, general.G, general.H, ...
+            general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+          
+          general.To = zeros(general.blocks, 1) + Y(1,length(Y(1,:)));
 
-            if general.inverse == 1 then
+          tau = previous_time:general.dt:general.time;
+        
+          scf(f_direct);
+          clf(f_direct,'reset');
+          title("Прямая задача");
+          subplot(2,1,1);
+          xgrid(1);
+          xlabel('время, с');
+          ylabel('тепловой поток, Вт/м2');    
+          plot(tau, general.U(:, 1), 'b');
+          plot(tau, general.U(:, 2), 'g');    
+          subplot(2,1,2);
+          xgrid(1);
+          xlabel('время, с');
+          ylabel('температура, °C');
+          for i=1:1:size(Y, 'r')
+            plot(tau, Y(i, :));
+          end
+        end
+		  end
+
+      if general.inverse == 1 then
 				if (iter == 1) then
 					sleep(1000);
 				end
@@ -862,6 +888,7 @@ function solveProblems()
 				disp(b - a);
 		    end
 			sleep(10000);
+      previous_time = general.time;
 		end
 		
 		// set default values
@@ -870,9 +897,10 @@ function solveProblems()
 		general.dt_total = floor(general.time/general.dt);
 		general.sp_length = 10;
 		general.sp_total = floor(general.dt_total/general.sp_length);
-		
-        //closeserial(h);
-    end
+		general.To =zeros(general.blocks, 1);
+    //closeserial(h);
+    disp('Конец измерений и расчета.');
+  end
 endfunction  
 
 global general; 
