@@ -733,7 +733,7 @@ function solveProblems()
        // h=openserial("COM" + general.com_num,"9600,n,8,1");
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
-			
+			a = toc();
       iter = iter + 1; // debug, look at 1 line above
       //   buff = readserial(h);
 			// count props again
@@ -791,24 +791,21 @@ function solveProblems()
 		  end
 
       if general.inverse == 1 then
-				if (iter == 1) then
-					sleep(1000);
-				end
+        if general.realtime_new_only ~= 1 
+				  if (iter == 1) then
+					 sleep(1000);
+				  end
 				
-				a = toc();
+				  
 				
-				results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
-					general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+				  results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
+					  general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
 	
-				scf(f_inverse);
-				clf(f_inverse,'reset');
-				//dtime = general.sp_length * general.sp_total * general.dt;
+				  scf(f_inverse);
+				  clf(f_inverse,'reset');
 			    tau = 0:general.dt:general.time;
-				//disp(general.time);
-				//disp(length(tau));
-				//disp(length(Y(1,:)));
-				tau = tau(1:length(results.Yreal(1,:)));				
-				//disp(tau);				
+
+				  tau = tau(1:length(results.Yreal(1,:)));								
 			    subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
@@ -818,12 +815,12 @@ function solveProblems()
 			    end
 	
 			    [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
-					getQYall(general.To, general.F, general.G, ...
-					general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
-					general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
-				//tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
-				tau = 0:general.dt:general.time;
-				tau = tau(1:length(results.Yinv(1,:)));
+					  getQYall(general.To, general.F, general.G, ...
+					  general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
+					  general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
+				  //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
+				  tau = 0:general.dt:general.time;
+				  tau = tau(1:length(results.Yinv(1,:)));
 	
 			    for i=1:1:size(results.Yinv, 'r')
 				    plot(tau, results.Yinv(i, :), 'r');
@@ -834,8 +831,8 @@ function solveProblems()
 			    subplot(2,1,2);
 			    a1=gca(); 
 			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
-				tau = 0:general.dt:general.time;
-				tau = tau(1:length(results.Qest));
+				  tau = 0:general.dt:general.time;
+				  tau = tau(1:length(results.Qest));
 				
 			    rule = tlist(['spline';'A']);
 			    rule.A = [];
@@ -848,31 +845,36 @@ function solveProblems()
 			    xgrid(1);
 			    xlabel('время, с');
 			    ylabel('тепловой поток, Вт/м2');
-				if length(tau) ~= 0 then
-					plot(tau, results.Qest, 'r');
+				  if length(tau) ~= 0 then
+					  plot(tau, results.Qest, 'r');
 		
-					if general.showDelta == 1 then
-						plot(tau, results.Qest + results.deltaQ, 'm-.');
-						plot(tau, results.Qest - results.deltaQ, 'm-.');    
-					end
-				end
+					  if general.showDelta == 1 then
+						  plot(tau, results.Qest + results.deltaQ, 'm-.');
+						  plot(tau, results.Qest - results.deltaQ, 'm-.');    
+					  end
+				  end
 	
 			    //tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
-				tau = 0:general.dt:general.time;
-				tau = tau(1:length(general.U(:,1)));	
+				  tau = 0:general.dt:general.time;
+				  tau = tau(1:length(general.U(:,1)));	
 			    plot(tau, general.U(:, 1), 'b');
 			    plot(tau, general.U(:, 2), 'g');
 	
 			    if general.showMatrices == 1 & matrices_are_shown == 0 then 
-					showMatrices();
-					matrices_are_shown = 1;
+					  showMatrices();
+					  matrices_are_shown = 1;
 			    end 
-				
-				b = toc();
-				disp('Loop time:');
-				disp(b - a);
+				 
+        else
+          // graphs will be redrawed
+          disp("redraw!");
 		    end
-			sleep(10000);
+        
+			end
+      b = toc();
+      disp('Loop time:');
+      disp(b - a);
+      sleep(10000);
       previous_time = general.time;
 		end
 		
