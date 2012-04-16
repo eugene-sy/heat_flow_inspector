@@ -733,6 +733,10 @@ function solveProblems()
        // h=openserial("COM" + general.com_num,"9600,n,8,1");
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
+      if (iter == 0) then
+        sleep(1000);
+      end
+
 			a = toc();
       iter = iter + 1; // debug, look at 1 line above
       //   buff = readserial(h);
@@ -792,21 +796,17 @@ function solveProblems()
 
       if general.inverse == 1 then
         if general.realtime_new_only ~= 1 
-				  if (iter == 1) then
-					 sleep(1000);
-				  end
-				
-				  
 				
 				  results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
 					  general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
 	
+          tau = 0:general.dt:general.time;
+          tau = tau(1:length(results.Yreal(1,:)));
+
 				  scf(f_inverse);
 				  clf(f_inverse,'reset');
-			    tau = 0:general.dt:general.time;
-
-				  tau = tau(1:length(results.Yreal(1,:)));								
-			    subplot(2,1,1);
+			    								
+          subplot(2,1,1);
 			    xgrid(1);
 			    xlabel('время, с');
 			    ylabel('температура, °C');
@@ -819,7 +819,8 @@ function solveProblems()
 					  general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
 					  general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
 				  //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
-				  tau = 0:general.dt:general.time;
+				  
+          tau = 0:general.dt:general.time;
 				  tau = tau(1:length(results.Yinv(1,:)));
 	
 			    for i=1:1:size(results.Yinv, 'r')
@@ -831,7 +832,8 @@ function solveProblems()
 			    subplot(2,1,2);
 			    a1=gca(); 
 			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
-				  tau = 0:general.dt:general.time;
+				  
+          tau = 0:general.dt:general.time;
 				  tau = tau(1:length(results.Qest));
 				
 			    rule = tlist(['spline';'A']);
@@ -859,17 +861,76 @@ function solveProblems()
 				  tau = tau(1:length(general.U(:,1)));	
 			    plot(tau, general.U(:, 1), 'b');
 			    plot(tau, general.U(:, 2), 'g');
-	
-			    if general.showMatrices == 1 & matrices_are_shown == 0 then 
-					  showMatrices();
-					  matrices_are_shown = 1;
-			    end 
 				 
         else
           // graphs will be redrawed
-          disp("redraw!");
-		    end
+          results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
+            general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+  
+          scf(f_inverse);
+          clf(f_inverse,'reset');
+          tau = 0:general.dt:general.time;
+
+          tau = tau(1:length(results.Yreal(1,:)));                
+          subplot(2,1,1);
+          xgrid(1);
+          xlabel('время, с');
+          ylabel('температура, °C');
+          for i=1:1:size(results.Yreal, 'r')
+            plot(tau, results.Yreal(i, :), 'b');
+          end
+  
+          [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
+            getQYall(general.To, general.F, general.G, ...
+            general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
+            general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
+          //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
+          tau = 0:general.dt:general.time;
+          tau = tau(1:length(results.Yinv(1,:)));
+  
+          for i=1:1:size(results.Yinv, 'r')
+            plot(tau, results.Yinv(i, :), 'r');
+          end
+          results.Yinv = [general.H * general.To results.Yinv];
+          Y_RMS = sqrt(norm(results.Yinv - results.Yreal)^2/size(results.Yinv, 'c'));
+          xtitle("СКО = " + string(Y_RMS));    
+          subplot(2,1,2);
+          a1=gca(); 
+          //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
+          tau = 0:general.dt:general.time;
+          tau = tau(1:length(results.Qest));
         
+          rule = tlist(['spline';'A']);
+          rule.A = [];
+          for i=1:1:size(results.Qest, 'c');
+            rule.A = [rule.A; tau(i) results.Qest(i)];
+          end
+          U1_ext = getU(rule, general.dt, general.sp_length * general.sp_total);
+          Q_RMS = sqrt(norm(U1_ext - general.U(:,1))^2/size(U1_ext, 'r'));
+          xtitle("СКО = " + string(Q_RMS));
+          xgrid(1);
+          xlabel('время, с');
+          ylabel('тепловой поток, Вт/м2');
+          if length(tau) ~= 0 then
+            plot(tau, results.Qest, 'r');
+    
+            if general.showDelta == 1 then
+              plot(tau, results.Qest + results.deltaQ, 'm-.');
+              plot(tau, results.Qest - results.deltaQ, 'm-.');    
+            end
+          end
+  
+          //tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
+          tau = 0:general.dt:general.time;
+          tau = tau(1:length(general.U(:,1)));  
+          plot(tau, general.U(:, 1), 'b');
+          plot(tau, general.U(:, 2), 'g');
+		    end
+
+        if general.showMatrices == 1 & matrices_are_shown == 0 then 
+            showMatrices();
+            matrices_are_shown = 1;
+        end
 			end
       b = toc();
       disp('Loop time:');
@@ -897,8 +958,8 @@ general = tlist(['problem';'direct';'dynresp';'dynresp_additional';'dynresp_lowe
 	'U';'qo';'po';'dq';'B';'To';'measurements';'H';'Eps';'R';'Y';'Q';'com_num']);
 
 //List of problems to solve
-general.direct = 1;
-general.inverse = 0;
+general.direct = 0;
+general.inverse = 1;
 general.sensivity = 0;
 general.sdo = 0;
 general.dynresp = 0;
