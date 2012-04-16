@@ -730,6 +730,8 @@ function solveProblems()
 		tau = [];
 		timestep = general.dt * general.dt_total;
     previous_time = 0;
+    previous_qest = 0;
+    previous_yreal = 0;
        // h=openserial("COM" + general.com_num,"9600,n,8,1");
 		tic();
 		while (iter < 10) // debug mode, infinite loop required
@@ -833,8 +835,8 @@ function solveProblems()
 			    a1=gca(); 
 			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
 				  
-          tau = 0:general.dt:general.time;
-				  tau = tau(1:length(results.Qest));
+          tau = [0, general.time];
+				  //tau = tau(1:length(results.Qest));
 				
 			    rule = tlist(['spline';'A']);
 			    rule.A = [];
@@ -864,12 +866,15 @@ function solveProblems()
 				 
         else
           // graphs will be redrawed
+          general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
+            getURT(rule2, general.dt, (general.sp_length * general.sp_total), previous_time)];
           results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
             general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
   
           scf(f_inverse);
           clf(f_inverse,'reset');
-          tau = 0:general.dt:general.time;
+          //tau = 0:general.dt:general.time;
+          tau = previous_time:general.dt:general.time;
 
           tau = tau(1:length(results.Yreal(1,:)));                
           subplot(2,1,1);
@@ -877,15 +882,17 @@ function solveProblems()
           xlabel('время, с');
           ylabel('температура, °C');
           for i=1:1:size(results.Yreal, 'r')
-            plot(tau, results.Yreal(i, :), 'b');
+            plot(tau, results.Yreal(i, :) + previous_yreal, 'b');
           end
+          previous_yreal = results.Yreal(1,length(results.Yreal(1,:)));
   
           [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
             getQYall(general.To, general.F, general.G, ...
             general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
             general.dq, general.po, general.R, general.Eps, general.sp_total, results.Yreal, general.B);
           //tau = general.dt:general.dt:general.sp_length * general.sp_total * general.dt;
-          tau = 0:general.dt:general.time;
+          //tau = 0:general.dt:general.time;
+          tau = previous_time:general.dt:general.time;
           tau = tau(1:length(results.Yinv(1,:)));
   
           for i=1:1:size(results.Yinv, 'r')
@@ -897,31 +904,35 @@ function solveProblems()
           subplot(2,1,2);
           a1=gca(); 
           //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
-          tau = 0:general.dt:general.time;
-          tau = tau(1:length(results.Qest));
+          tau = [previous_time, general.time];
+          //tau = tau(1:length(results.Qest));
         
           rule = tlist(['spline';'A']);
           rule.A = [];
           for i=1:1:size(results.Qest, 'c');
             rule.A = [rule.A; tau(i) results.Qest(i)];
           end
-          U1_ext = getU(rule, general.dt, general.sp_length * general.sp_total);
+          U1_ext = getURT(rule, general.dt, general.sp_length * general.sp_total, previous_time);
           Q_RMS = sqrt(norm(U1_ext - general.U(:,1))^2/size(U1_ext, 'r'));
           xtitle("СКО = " + string(Q_RMS));
           xgrid(1);
           xlabel('время, с');
           ylabel('тепловой поток, Вт/м2');
           if length(tau) ~= 0 then
+            results.Qest = results.Qest + previous_qest;
             plot(tau, results.Qest, 'r');
     
             if general.showDelta == 1 then
               plot(tau, results.Qest + results.deltaQ, 'm-.');
               plot(tau, results.Qest - results.deltaQ, 'm-.');    
             end
+
+            previous_qest = results.Qest(length(results.Qest));
           end
   
           //tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
-          tau = 0:general.dt:general.time;
+          //tau = 0:general.dt:general.time;
+          tau = previous_time:general.dt:general.time;
           tau = tau(1:length(general.U(:,1)));  
           plot(tau, general.U(:, 1), 'b');
           plot(tau, general.U(:, 2), 'g');
@@ -931,7 +942,10 @@ function solveProblems()
             showMatrices();
             matrices_are_shown = 1;
         end
-			end
+			 
+        general.To = zeros(general.blocks, 1) + results.Yreal(1,length(results.Yreal(1,:)));
+
+      end
       b = toc();
       disp('Loop time:');
       disp(b - a);
@@ -966,7 +980,7 @@ general.dynresp = 0;
 general.dynresp_additional = 0;
 general.dynresp_lower = 0;
 general.realtime = 1;
-general.realtime_new_only = 0;
+general.realtime_new_only = 1;
 general.isFromFile = 0;
 general.QFromFile = 0;
 general.showMatrices = 0;
