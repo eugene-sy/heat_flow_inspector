@@ -629,8 +629,8 @@ function solveInverseOnce(fig)
       general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
       general.dq, general.sp_length);
       [dqa, dqb] = getSDI(Hqa, Hqb, general.sp_length, general.B)
-    plot(tau, results.Qest + dqa, 'y-');
-    plot(tau, results.Qest - dqa, 'y-');
+    plot(tau, results.Qest + dqa, 'b-.');
+    plot(tau, results.Qest - dqa, 'b-.');
   end
 	
 	tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
@@ -839,10 +839,11 @@ function solveProblems()
 			    xtitle("СКО = " + string(Y_RMS));    
 			    subplot(2,1,2);
 			    a1=gca(); 
-			    tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
-				  
+			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
+				  tau = 0:general.time / (length(results.Qest) - 1 ) :general.time;
+
           //tau = [0, general.time];
-				  //tau = tau(1:length(results.Qest));
+				  tau = tau(1:length(results.Qest));
 				
 			    rule = tlist(['spline';'A']);
 			    rule.A = [];
