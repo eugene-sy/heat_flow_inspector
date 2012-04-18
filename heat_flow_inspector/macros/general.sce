@@ -629,8 +629,8 @@ function solveInverseOnce(fig)
       general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
       general.dq, general.sp_length);
       [dqa, dqb] = getSDI(Hqa, Hqb, general.sp_length, general.B)
-    plot(tau, results.Qest + dqa, 'g-');
-    plot(tau, results.Qest - dqa, 'g-');
+    plot(tau, results.Qest + dqa, 'y-');
+    plot(tau, results.Qest - dqa, 'y-');
   end
 	
 	tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
@@ -659,11 +659,11 @@ function solveProblems()
     global('results');
     general.realtime = get(realtime_checkbox, "Value");
     general.realtime_new_only = get(realtime_redraw_checkbox, "Value");
-    general.delay = get(edit_DELAY, "String");
+    [general.delay, endstr] = strtod(get(edit_DELAY,"String"));
     general.direct = get(direct_checkbox, "Value");
 	general.sensivity = get(sensivity_checkbox, "Value");
 	general.sdo = get(sdo_checkbox, "Value");
-  general.sdo = get(sdi_checkbox, "Value");
+  general.sdi = get(sdi_checkbox, "Value");
 	general.inverse = get(inverse_checkbox, "Value");
 	general.dynresp = get(dynresp_checkbox, "Value");
 	general.dynresp_additional = get(dynresp_add_checkbox, "Value");
@@ -682,8 +682,7 @@ function solveProblems()
 	general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
 		getU(rule2, general.dt, general.sp_length * general.sp_total)];
 	general.com_num = get(edit_COMNUM, "String");
-	
-  disp(general.realtime_new_only);
+
     // grphic windows
 	// direct solution
     if general.direct == 1 then
@@ -840,13 +839,14 @@ function solveProblems()
 			    xtitle("СКО = " + string(Y_RMS));    
 			    subplot(2,1,2);
 			    a1=gca(); 
-			    //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
+			    tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
 				  
-          tau = [0, general.time];
+          //tau = [0, general.time];
 				  //tau = tau(1:length(results.Qest));
 				
 			    rule = tlist(['spline';'A']);
 			    rule.A = [];
+
 			    for i=1:1:size(results.Qest, 'c');
 				    rule.A = [rule.A; tau(i) results.Qest(i)];
 			    end
@@ -863,6 +863,17 @@ function solveProblems()
 						  plot(tau, results.Qest + results.deltaQ, 'm-.');
 						  plot(tau, results.Qest - results.deltaQ, 'm-.');    
 					  end
+
+            if general.sdi == 1 then
+              [Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
+                general.U(1:general.sp_length + 1,:), general.dt, ...
+                general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
+                general.dq, general.sp_length);
+              [dqa, dqb] = getSDI(Hqa, Hqb, general.sp_length, general.B);
+              disp("СДИ:" + dqa);
+              plot(tau, results.Qest + dqa, 'y-');
+              plot(tau, results.Qest - dqa, 'y-');
+            end
 				  end
 	
 			    //tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
@@ -912,6 +923,7 @@ function solveProblems()
           a1=gca(); 
           //tau = 0:general.dt*general.sp_length:general.sp_length * general.sp_total * general.dt;
           tau = [previous_time, general.time];
+          //tau = previous_time:general.dt:general.time;
           //tau = tau(1:length(results.Qest));
         
           rule = tlist(['spline';'A']);
@@ -934,12 +946,23 @@ function solveProblems()
               plot(tau, results.Qest - results.deltaQ, 'm-.');    
             end
 
+            if general.sdi == 1 then
+              [Hqa, Hqb] = getHH(general.To, general.F, general.G, general.H, ...
+                general.U(1:general.sp_length + 1,:), general.dt, ...
+                general.sp_length, general.U(1,1), general.U(general.sp_length + 1,1),...
+                general.dq, general.sp_length);
+              [dqa, dqb] = getSDI(Hqa, Hqb, general.sp_length, general.B);
+              disp("СДИ:" + string(dqa));
+              plot(tau, results.Qest + dqa, 'y-');
+              plot(tau, results.Qest - dqa, 'y-');
+            end
+
             previous_qest = results.Qest(length(results.Qest));
           end
   
           //tau = 0:general.dt:general.sp_length * general.sp_total * general.dt;
           //tau = 0:general.dt:general.time;
-          tau = previous_time:general.dt:general.time;
+          tau = previous_time:(general.time - previous_time) / 10:general.time;
           tau = tau(1:length(general.U(:,1)));  
           plot(tau, general.U(:, 1), 'b');
           plot(tau, general.U(:, 2), 'g');
@@ -951,11 +974,10 @@ function solveProblems()
         end
 			 
         general.To = zeros(general.blocks, 1) + results.Yreal(1,length(results.Yreal(1,:)));
-
+        general.qo = general.qo + results.Qest(length(results.Qest));
       end
       b = toc();
-      disp('Loop time:');
-      disp(b - a);
+      disp("Время вычислений: " + string(b - a));
       sleep(general.delay * 1000);
       previous_time = general.time;
 		end
