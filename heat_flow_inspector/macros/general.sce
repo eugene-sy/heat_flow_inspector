@@ -747,6 +747,10 @@ function solveProblems()
 
 			a = toc();
       iter = iter + 1; // debug, look at 1 line above
+      // testing!
+      //disp(general.H); 
+      //disp(general.To);
+      general.H = constT(10, general.sp_length);
       //   general.H = readserial(h);
 			// count props again
 						

@@ -27,9 +27,13 @@ exec(pathmacros + "rule.sci");
 //realtime ones
 exec(pathmacros + "calcURT.sci");
 
+disp('Loading test data');
+exec(pathmacros + "testData/calcT.sci");
+
 disp('Loading GUI');
 //Loading GUI
 exec(pathmacros + "general.sce");
+
 
 warning(warning_mode);
 
