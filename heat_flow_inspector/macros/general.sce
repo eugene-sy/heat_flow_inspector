@@ -747,11 +747,6 @@ function solveProblems()
 
 			a = toc();
       iter = iter + 1; // debug, look at 1 line above
-      // testing!
-      //disp(general.H); 
-      //disp(general.To);
-      general.H = constT(10, general.sp_length);
-      //   general.H = readserial(h);
 			// count props again
 						
 			general.time = toc();
@@ -764,29 +759,44 @@ function solveProblems()
       end
       dtime = general.sp_length * general.sp_total * general.dt;
       
+      // testing!
+      //disp(general.H); 
+      //disp(general.To);
+      //general.To = constT(10, general.sp_length);
+      general.To = linearT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length); 
+      disp(general.To);
+      //disp(general.sp_length);
+      //   general.H = readserial(h);
 
       // direct solution
       if general.direct == 1 then
         Y = 0;
         tau = 0;
         if general.realtime_new_only ~= 1
-			    Y = getYall(general.To, general.F, general.G, general.H, ...
-				  	general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
-			
-				  tau = 0:general.dt:general.time;
+          general.dt = (general.time - 0)/10;
+			    //Y = getYall(general.To, general.F, general.G, general.H, ...
+				  //	general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+          general.U = [getURT(rule1, general.dt, general.sp_length, 0),...
+            getURT(rule2, general.dt, general.sp_length, 0)];
+          for i = 1:1:length(general.To)
+            Y(1, i) = general.To(i);
+          end			
           // otherwise dimentions of tau and Y will not match
-				  tau = tau(1:length(Y(1,:)));
+				  tau = 0:general.dt:general.time;
         else
           general.dt = (general.time - previous_time)/10;
           general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
             getURT(rule2, general.dt, (general.sp_length * general.sp_total), previous_time)];
-          Y = getYall(general.To, general.F, general.G, general.H, ...
-            general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
-          
+          //Y = getYall(general.To, general.F, general.G, general.H, ...
+          //  general.U, general.dt, general.sp_length, general.sp_total, general.Eps);
+          for i = 1:1:length(general.To)
+            Y(1, i) = general.To(i);
+          end
           general.To = zeros(general.blocks, 1) + Y(1,length(Y(1,:)));
 
           tau = previous_time:general.dt:general.time;
         end
+        disp(general.U(:, 1))
 
         scf(f_direct);
         clf(f_direct,'reset');
