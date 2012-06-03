@@ -764,6 +764,7 @@ function solveProblems()
       //disp(general.To);
       //general.To = constT(10, general.sp_length);
       general.To = linearT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length); 
+      general.To = harmonicalT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length);
       disp(general.To);
       //disp(general.sp_length);
       //   general.H = readserial(h);
@@ -901,9 +902,15 @@ function solveProblems()
           // graphs will be redrawed
           general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
             getURT(rule2, general.dt, (general.sp_length * general.sp_total), previous_time)];
-          results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
-            general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
-  
+          //results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
+          //  general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+          for i = 1:1:length(general.To)
+            results.Yreal(1, i) = general.To(i);
+          end
+
+          //disp(results.Yreal); 
+          //disp ( general.To);
+
           scf(f_inverse);
           clf(f_inverse,'reset');
           //tau = 0:general.dt:general.time;
@@ -928,6 +935,7 @@ function solveProblems()
           tau = previous_time:general.dt:general.time;
           tau = tau(1:length(results.Yinv(1,:)));
   
+          disp(results.Yinv);
           for i=1:1:size(results.Yinv, 'r')
             plot(tau, results.Yinv(i, :), 'r');
           end
@@ -953,7 +961,8 @@ function solveProblems()
           xlabel('время, с');
           ylabel('тепловой поток, Вт/м2');
           if length(tau) ~= 0 then
-            results.Qest = results.Qest + previous_qest;
+            results.Qest = results.Qest;// + previous_qest;
+            disp(results.Qest);
             plot(tau, results.Qest, 'r');
     
             if general.showDelta == 1 then
@@ -988,8 +997,8 @@ function solveProblems()
             matrices_are_shown = 1;
         end
 			 
-        general.To = zeros(general.blocks, 1) + results.Yreal(1,length(results.Yreal(1,:)));
-        general.qo = general.qo + results.Qest(length(results.Qest));
+        general.To = zeros(general.blocks, 1);// + results.Yreal(1,length(results.Yreal(1,:)));
+        general.qo = general.qo;// + results.Qest(length(results.Qest));
       end
       b = toc();
       disp("Время вычислений: " + string(b - a));

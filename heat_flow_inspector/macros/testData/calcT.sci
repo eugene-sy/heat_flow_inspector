@@ -10,7 +10,7 @@ function T = linearT(startT, a, tau0, dt, sp_length)
 	end
 endfunction
 
-function T = harmonicalT(startT, w, tau0, dt)
+function T = harmonicalT(startT, w, tau0, dt, sp_length)
 	for i = 1:1:sp_length + 1;
 		T(i) = startT + sin(w * ((i - 1) * dt + tau0));
 	end
