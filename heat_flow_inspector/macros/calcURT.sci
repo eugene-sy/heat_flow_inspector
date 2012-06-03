@@ -1,4 +1,8 @@
-// Version 0.9
+// Version 1.1
+// разница между стационарной системой и системой реального времени заключается в
+// дополнении уранений праметром tau0 - начальный момент времени для расчета
+
+
 function [U] = getURT(rule, dt, sp_length, tau0)
   rule_type = typeof(rule);
   select rule_type

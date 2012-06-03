@@ -733,28 +733,30 @@ function solveProblems()
 		matrices_are_shown = 0; // for showMatrices case (just to solve and render it once)
 		
 		// params
+    // временные переменные решения
 		tau = [];
-		timestep = general.dt * general.dt_total;
-    previous_time = 0;
-    previous_qest = 0;
-    previous_yreal = 0;
-       // h=openserial("COM" + general.com_num,"9600,n,8,1");
-		tic();
+		timestep = general.dt * general.dt_total; // шаг по времени
+    previous_time = 0; // момент начала предыдущего расчета, нужен для вычисления времени следующей итерации
+    previous_qest = 0; // поток на предыдущей итерации
+    previous_yreal = 0; // температуры на предыдущей иетрации
+       // h=openserial("COM" + general.com_num,"9600,n,8,1"); // последовательный порт, открытие
+		tic(); // запуск таймера
+
 		while (iter < 10) // debug mode, infinite loop required
-      if (iter == 0) then
+      if (iter == 0) then     // задержка в 1 секудну для первой итерации
         sleep(1000);
       end
 
-			a = toc();
+			a = toc(); // текущий момент времени
       iter = iter + 1; // debug, look at 1 line above
 			// count props again
-						
-			general.time = toc();
+			// 			
+			general.time = toc(); // аналогично
       
 			if general.realtime_new_only == 0
-        general.dt_total = floor(general.time/general.dt);
+        general.dt_total = floor(general.time/general.dt); // перерасчитываем параметры для сплайнов
 			  general.sp_total = floor(general.dt_total/general.sp_length);	 
-        general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),...
+        general.U = [getU(rule1, general.dt, general.sp_length * general.sp_total),... // перерачитываем модельные потоки
           getU(rule2, general.dt, general.sp_length * general.sp_total)];
       end
       dtime = general.sp_length * general.sp_total * general.dt;
@@ -762,6 +764,7 @@ function solveProblems()
       // testing!
       //disp(general.H); 
       //disp(general.To);
+      // моделирование потоков из calcT
       //general.To = constT(10, general.sp_length);
       general.To = linearT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length); 
       general.To = harmonicalT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length);
@@ -798,7 +801,7 @@ function solveProblems()
           tau = previous_time:general.dt:general.time;
         end
         disp(general.U(:, 1))
-
+        // графики
         scf(f_direct);
         clf(f_direct,'reset');
         title("Прямая задача");
@@ -819,7 +822,7 @@ function solveProblems()
 
       if general.inverse == 1 then
         if general.realtime_new_only ~= 1 
-				
+				  // решение для всего промежутка
 				  results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
 					  general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
 	
@@ -899,18 +902,20 @@ function solveProblems()
 			    plot(tau, general.U(:, 2), 'g');
 				 
         else
+        // решение для промежутка времени от начала предыдущей итерации до начала следующей
           // graphs will be redrawed
           general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
             getURT(rule2, general.dt, (general.sp_length * general.sp_total), previous_time)];
           //results.Yreal = getYall(general.To, general.F, general.G, general.H, ...
           //  general.U, general.dt, general.sp_length, general.sp_total, general.Eps)
+          // температуры
           for i = 1:1:length(general.To)
             results.Yreal(1, i) = general.To(i);
           end
 
           //disp(results.Yreal); 
           //disp ( general.To);
-
+          // очистка графиков
           scf(f_inverse);
           clf(f_inverse,'reset');
           //tau = 0:general.dt:general.time;
@@ -926,6 +931,7 @@ function solveProblems()
           end
           previous_yreal = results.Yreal(1,length(results.Yreal(1,:)));
   
+          // решение озт
           [results.Qest, results.Qhist, results.Yinv, results.P, results.HH, results.K, results.deltaQ] = ...
             getQYall(general.To, general.F, general.G, ...
             general.H, general.U(:, 2), general.dt, general.sp_length, general.qo,...
@@ -935,7 +941,7 @@ function solveProblems()
           tau = previous_time:general.dt:general.time;
           tau = tau(1:length(results.Yinv(1,:)));
   
-          disp(results.Yinv);
+          //disp(results.Yinv);
           for i=1:1:size(results.Yinv, 'r')
             plot(tau, results.Yinv(i, :), 'r');
           end
