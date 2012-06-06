@@ -45,8 +45,8 @@ function [dqa, dqb] = getSDI(Hqa, Hqb, sp_length, B)
   disp(A);
   inv_A = inv(A);
   disp(inv_A);
-  dqa = sqrt(inv_A(1, 1) * B) / 2; 
-  dqb = sqrt(inv_A(2, 2) * B) / 2;
+  dqa = sqrt(inv_A(1, 1) * B); 
+  dqb = sqrt(inv_A(2, 2) * B);
   disp(dqa);
   disp(dqb);
 endfunction
