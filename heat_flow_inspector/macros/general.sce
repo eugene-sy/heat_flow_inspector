@@ -766,9 +766,9 @@ function solveProblems()
       //disp(general.To);
       // моделирование потоков из calcT
       //general.To = constT(10, general.sp_length);
-      general.To = linearT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length); 
-      general.To = harmonicalT(10, 10, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length);
-      disp(general.To);
+      general.To = linearT(0, -1, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length); 
+      //general.To = harmonicalT(10, 100, previous_time, (general.time - previous_time) / (general.sp_length + 1), general.sp_length);
+      //disp(general.To);
       //disp(general.sp_length);
       //   general.H = readserial(h);
 
@@ -902,6 +902,7 @@ function solveProblems()
 			    plot(tau, general.U(:, 2), 'g');
 				 
         else
+          general.dt = (general.time - previous_time) / general.sp_length ;
         // решение для промежутка времени от начала предыдущей итерации до начала следующей
           // graphs will be redrawed
           general.U = [getURT(rule1, general.dt, (general.sp_length * general.sp_total), previous_time),...
@@ -919,6 +920,7 @@ function solveProblems()
           scf(f_inverse);
           clf(f_inverse,'reset');
           //tau = 0:general.dt:general.time;
+          disp(general.dt);
           tau = previous_time:general.dt:general.time;
 
           tau = tau(1:length(results.Yreal(1,:)));                
@@ -967,7 +969,7 @@ function solveProblems()
           xlabel('время, с');
           ylabel('тепловой поток, Вт/м2');
           if length(tau) ~= 0 then
-            results.Qest = results.Qest;// + previous_qest;
+            results.Qest = results.Qest + previous_qest;
             disp(results.Qest);
             plot(tau, results.Qest, 'r');
     

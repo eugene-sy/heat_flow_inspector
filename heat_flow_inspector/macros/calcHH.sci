@@ -43,10 +43,10 @@ function [dqa, dqb] = getSDI(Hqa, Hqb, sp_length, B)
     A = A + [Hqa(:, j) Hqb(:, j)]' * [Hqa(:, j) Hqb(:, j)];
   end
   disp(A);
-  //inv_A = invr(A);
-  //disp(inv_A);
-  dqa = sqrt(A(1, 1) * B) / 2 * 1000000; 
-  dqb = sqrt(A(2, 2) * B) / 2 * 1000000;
+  inv_A = inv(A);
+  disp(inv_A);
+  dqa = sqrt(inv_A(1, 1) * B) / 2; 
+  dqb = sqrt(inv_A(2, 2) * B) / 2;
   disp(dqa);
   disp(dqb);
 endfunction
